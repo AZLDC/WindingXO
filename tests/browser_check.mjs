@@ -336,6 +336,27 @@ try {
     await click('#minimizeAngel');await click('#start');await click('#shutdown');
     await until(()=>evaluate('location.pathname.endsWith("/shutdown.html")&&document.readyState==="complete"'),'browser shutdown');
     assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。');
+    await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
+    await delay(30);
+    assert.equal(await evaluate(`(()=>{
+        const c=document.getElementById('shutdownText'),s=getComputedStyle(c),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+        let visible=0;
+        for(let i=0;i<pixels.length;i+=4){
+            if(pixels[i+3]!==0&&pixels[i+3]!==255)return false;
+            if(pixels[i+3]){visible++;if(pixels[i]!==192||pixels[i+1]!==192||pixels[i+2]!==192)return false;}
+        }
+        const r=c.getBoundingClientRect();
+        return visible>100&&s.imageRendering==='pixelated'&&s.display!=='none'&&r.width/c.width===3&&r.x>=0&&r.right<=innerWidth;
+    })()`),true,'shutdown text must use sharp gray-white pixels and integer scaling');
+    if(process.env.WINDING_PREVIEW_DIR){
+        const shot=await send('Page.captureScreenshot',{format:'png'});
+        await writeFile(join(process.env.WINDING_PREVIEW_DIR,'shutdown-pixel.png'),Buffer.from(shot.data,'base64'));
+    }
+    for(const width of [390,640]){
+        await send('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:false});
+        await delay(30);
+        assert.equal(await evaluate('(()=>{const c=document.getElementById("shutdownText"),r=c.getBoundingClientRect();return r.x>=0&&r.right<=innerWidth&&[1,2,3].includes(r.width/c.width);})()'),true,'coarse shutdown pixels must fit narrow viewports without fractional stretching');
+    }
     await evaluate('window.powerNow=Date.now();Date.now=()=>powerNow;window.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));powerNow+=299999;window.dispatchEvent(new Event("focus"))');
     assert.equal(await evaluate('location.pathname.endsWith("/shutdown.html")&&!document.getElementById("idleScreen")'),true,'safe power-off message remains before five minutes');
     await evaluate('powerNow+=1;window.dispatchEvent(new Event("focus"))');
