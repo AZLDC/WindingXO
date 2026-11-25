@@ -91,8 +91,8 @@ TextStore只接受單層文字檔名與指定副檔名，拒絕跳脫／裝置�
 
 ## 網站游標
 
-Loading與固定框架先使用assets/cursors/black-dot.png；進入登入、桌面或關機頁後，html的crystal-cursor類別以靜態水晶圖作fallback。crystal-frames.js提供96個32×32 PNG資料URL，cursor.js以performance.now及受控計時器每6秒循環，透過--crystal-cursor更新CSS cursor，hotspot固定3,2。這是原生CSS游標，不新增跟隨指標的DOM覆蓋層，框架內切頁也使用相同資產。
+Loading與固定框架先使用assets/cursors/black-dot.png；進入登入或桌面後，html的crystal-cursor類別以靜態水晶圖作fallback。crystal-frames.js提供96個32×32 PNG資料URL，cursor.js以performance.now及受控計時器每6秒循環，透過--crystal-cursor更新CSS cursor，hotspot固定3,2。這是原生CSS游標，不新增跟隨指標的DOM覆蓋層，框架內切頁也使用相同資產。
 
-interaction.css只接管一般區域與操作按鈕；input／textarea保留text，resize-handle及對話框標題沿用縮放／移動游標，禁用控制為not-allowed。背景頁、pagehide及winding:idle停止動畫，visibilitychange、pageshow或winding:resume恢復；黑屏沿用黑點游標。
+interaction.css接管一般區域、操作按鈕與文字輸入框；input／textarea同樣使用水晶滑鼠游標，原生文字插入線保留，resize-handle及對話框標題沿用縮放／移動游標，禁用控制為not-allowed。背景頁、pagehide及winding:idle停止動畫，visibilitychange、pageshow或winding:resume恢復；黑屏沿用黑點游標。模擬關機頁不載入水晶動畫或加上crystal-cursor類別，僅保留黑點游標；cursor.js也以該類別作為啟動條件。
 
 幾何來源tools/crystal-cursor-source.js保留中空及V字凹口，以薄晶面沿長軸旋轉。tools/build-cursors.mjs用無視窗Edge離線產生PNG及幀資料，網站執行時直接讀取專案資產，不下載外部圖片。

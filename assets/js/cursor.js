@@ -3,7 +3,7 @@
 // 使用已儲存的PNG幀更新原生CSS游標，不在頁面上加跟隨滑鼠的覆蓋圖層。
 (() => {
     const data=window.windingCursorFrames,root=document.documentElement;
-    if(!data?.frames?.length)return;
+    if(!root.classList.contains('crystal-cursor')||!data?.frames?.length)return;
     let timer=null,paused=false,previous=-1;
     function paint(){
         if(paused||document.hidden)return;

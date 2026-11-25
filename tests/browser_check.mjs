@@ -94,8 +94,8 @@ try {
     await until(()=>evaluate('document.hasFocus()'),'headless page focus');
     assert.equal(await evaluate(`(()=>{
         const d=window.windingCursorFrames;
-        return d.frames.length===96&&new Set(d.frames).size>20&&d.width===32&&d.height===32&&d.hotspot.join(',')==='3,2'&&d.duration===6000&&getComputedStyle(document.body).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#newFile')).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#text')).cursor==='text'&&getComputedStyle(document.querySelector('.resize-handle[data-edge="e"]')).cursor==='ew-resize';
-    })()`),true,'stored crystal frames apply to normal controls and preserve text/resize cursors');
+        return d.frames.length===96&&new Set(d.frames).size>20&&d.width===32&&d.height===32&&d.hotspot.join(',')==='3,2'&&d.duration===6000&&getComputedStyle(document.body).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#newFile')).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#text')).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('.resize-handle[data-edge="e"]')).cursor==='ew-resize';
+    })()`),true,'stored crystal frames apply to normal controls and include text fields and preserve resize cursors');
     assert.equal(await evaluate(`(async()=>{
         const image=new Image();image.src=windingCursorFrames.frames[0];await image.decode();
         const c=document.createElement('canvas');c.width=c.height=32;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);
@@ -194,6 +194,7 @@ try {
     await contextMenu('#editor .titlebar');await menuClick('Restore');
     await shortcut();
     await until(()=>evaluate('!document.getElementById("filename").hidden'),'filename');
+    assert.equal(await evaluate('getComputedStyle(document.getElementById("filename")).cursor.includes("data:image/png")'),true,'filename input must use the crystal cursor');
     assert.equal(await evaluate('document.getElementById("modal").classList.contains("angel-modal")'),true);
     const before=await evaluate('(()=>{const r=document.getElementById("dialogTitle").getBoundingClientRect();return {x:r.x,y:r.y};})()');
     await send('Input.dispatchMouseEvent',{type:'mousePressed',x:before.x+20,y:before.y+12,button:'left',clickCount:1});
@@ -365,6 +366,7 @@ try {
     await until(()=>evaluate('location.pathname.endsWith("/shutdown.html")&&document.readyState==="complete"'),'browser shutdown');
     await until(()=>evaluate('document.querySelector("main").classList.contains("pixel-ready")'),'shutdown pixels and fonts ready');
     assert.equal(await evaluate('getComputedStyle(document.querySelector("main")).visibility'),'visible');
+    assert.equal(await evaluate('!document.documentElement.classList.contains("crystal-cursor")&&!window.windingCursorFrames&&!document.documentElement.dataset.cursorFrame'),true,'simulated shutdown must not load or animate the crystal cursor');
     assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。（うそです！）');
     await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
     await delay(30);
@@ -434,6 +436,7 @@ try {
         for(let i=0;i<=50;i++){clock=i*100;document.dispatchEvent(new MouseEvent('mousemove',{clientX:i,clientY:20,bubbles:true}));}
     })()`);
     await until(()=>inFrame('location.pathname.endsWith("/login.html")&&document.readyState==="complete"'),'frame login');
+    assert.equal(await inFrame('getComputedStyle(document.getElementById("password")).cursor.includes("data:image/png")'),true,'password input must use the crystal cursor');
     await inFrame('input.value=window.WINDING_CONFIG.password;input.dispatchEvent(new Event("input"));document.getElementById("enter").click()');
     await until(()=>inFrame('location.pathname.endsWith("/desktop.html")&&document.readyState==="complete"'),'frame desktop');
     assert.equal(await evaluate('location.href'),url('index.html'));
