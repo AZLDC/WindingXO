@@ -1,10 +1,11 @@
 'use strict';
 
 // 用系統舊字型在12px點陣格繪製，不下載或打包字型。
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
     const canvas=document.getElementById('shutdownText'),heading=document.querySelector('h1');
+    const main=document.querySelector('main');
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    if(!ctx)return;
+    if(!ctx){main.classList.add('text-fallback');return;}
     function draw(){
         const font='bold 12px "MS Gothic","ＭＳ ゴシック","MS UI Gothic","MingLiU",monospace';
         ctx.font=font;
@@ -27,7 +28,9 @@ document.addEventListener('DOMContentLoaded',()=>{
         }
         ctx.putImageData(pixels,0,0);
         canvas.style.width=`${canvas.width*scale}px`;canvas.style.height=`${canvas.height*scale}px`;
-        canvas.hidden=false;document.querySelector('main').classList.add('pixel-ready');
+        canvas.hidden=false;main.classList.add('pixel-ready');
     }
+    // 第一幀維持全黑，字型、像素及CSS尺寸準備完成才揭露文字。
+    await document.fonts.ready;
     draw();window.addEventListener('resize',draw);
 });

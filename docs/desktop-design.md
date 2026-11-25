@@ -12,7 +12,7 @@ index.html只承載100%大小的appFrame，初始src為Loading.html（原開機�
 
 HTML版用IndexedDB windingxo-browser v1，files以name為key、保存content，trash以UUID保存刪除內容。唯第一次資料庫建立的upgrade交易種入七份Guard Skills；刪空不觸發重種，沒有匯入／匯出實體檔要求。名稱及副檔名只是虛擬識別，沿用2MiB與衝突確認。保存的檢查與寫入同一readwrite交易，完成才回成功；刪除與trash寫入亦同一交易，避免部分成功。
 
-HTML的get_disk_usage回kind:browser及Storage API儲存配額／用量估計，前端沿用GB／USED格式，不假裝可見整個硬碟。toggle_fullscreen使用Fullscreen API，close_app前往shutdown.html，顯示灰白日文安全關機文字並沿用5分鐘閒置黑屏／喚醒回Loading。shutdown-text.js使用系統MS Gothic等字型以粗體繪入12px格點、二值化字緣並依可用寬度以3／2／1整數倍放大，降低現代字緣平滑感；窄畫面可換行，不打包或下載字型。Python分支仍操作原生視窗與texts，不共用瀏覽器資料。
+HTML的get_disk_usage回kind:browser及Storage API儲存配額／用量估計，前端沿用GB／USED格式，不假裝可見整個硬碟。toggle_fullscreen使用Fullscreen API，close_app前往shutdown.html，顯示灰白日文安全關機文字並沿用5分鐘閒置黑屏／喚醒回Loading。shutdown-text.js使用系統MS Gothic等字型以粗體繪入12px格點、二值化字緣並依可用寬度以3／2／1整數倍放大，降低現代字緣平滑感；窄畫面可換行，不打包或下載字型。關機main預設visibility:hidden，等待document.fonts.ready並完成像素繪製／CSS整數放大後才以pixel-ready一次揭露，避免原始h1先閃出小字；無Canvas或停用JS時保留文字替代顯示。Python分支仍操作原生視窗與texts，不共用瀏覽器資料。
 
 獨立file://流程以Windows系統Edge驗證；同一設定檔及同一檔案位置使用，不保證不同瀏覽器對本機檔案的儲存隔離方式一致。改檔案位置或清瀏覽器資料前需自行保留需要的內容。
 

@@ -30,7 +30,7 @@ if(process.env.WINDING_HTTP==='1'){
 const profile=await mkdtemp(join(tmpdir(),'winding-browser-check-'));
 const edge=process.env.WINDING_EDGE || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
 const child=spawn(edge,['--headless=new','--no-first-run','--no-default-browser-check','--disable-background-networking','--remote-debugging-port=0',`--user-data-dir=${profile}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
-let socket,next=0;
+let socket,next=0,pausedShutdownRequest;
 const pending=new Map(),errors=[];
 const contexts=new Map();
 async function until(check,description,timeout=10000) {
@@ -80,7 +80,8 @@ try {
             const task=pending.get(message.id);if(!task)return;
             pending.delete(message.id);clearTimeout(task.timer);
             if(message.error)task.reject(new Error(message.error.message));else task.resolve(message.result);
-        } else if(message.method==='Runtime.exceptionThrown')errors.push(message.params.exceptionDetails.text);
+        } else if(message.method==='Fetch.requestPaused')pausedShutdownRequest=message.params.requestId;
+        else if(message.method==='Runtime.exceptionThrown')errors.push(message.params.exceptionDetails.text);
         else if(message.method==='Runtime.executionContextCreated' && message.params.context.auxData?.isDefault)contexts.set(message.params.context.auxData.frameId,message.params.context.id);
         else if(message.method==='Runtime.executionContextsCleared')contexts.clear();
     };
@@ -333,8 +334,18 @@ try {
     await navigate('desktop.html');
     assert.deepEqual(await evaluate('api("list_files")'),[],'empty library must not reseed');
     await click('#angel');await until(()=>evaluate('document.querySelector("#fileList .empty")?.textContent==="(null)"'),'empty list');
+    if(baseURL)await send('Fetch.enable',{patterns:[{urlPattern:'*assets/js/shutdown-text.js*',requestStage:'Request'}]});
     await click('#minimizeAngel');await click('#start');await click('#shutdown');
+    if(baseURL){
+        await until(()=>pausedShutdownRequest,'paused shutdown text script');
+        await until(()=>evaluate('Boolean(document.querySelector("main h1"))'),'shutdown HTML before script');
+        assert.equal(await evaluate('getComputedStyle(document.querySelector("main")).visibility'), 'hidden','before pixel script and scaling are ready, the page must remain black');
+        await send('Fetch.continueRequest',{requestId:pausedShutdownRequest});
+        await send('Fetch.disable');
+    }
     await until(()=>evaluate('location.pathname.endsWith("/shutdown.html")&&document.readyState==="complete"'),'browser shutdown');
+    await until(()=>evaluate('document.querySelector("main").classList.contains("pixel-ready")'),'shutdown pixels and fonts ready');
+    assert.equal(await evaluate('getComputedStyle(document.querySelector("main")).visibility'),'visible');
     assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。');
     await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
     await delay(30);
