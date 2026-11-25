@@ -6,7 +6,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_FILES = ("index.html", "Loading.html", "login.html", "desktop.html", "shutdown.html",
-              "README.md", "RUN.cmd", ".gitignore", ".gitattributes", ".nojekyll")
+              "README.md", "AGENTS.md", "RUN.cmd", ".gitignore", ".gitattributes", ".nojekyll")
 SOURCE_DIRS = ("assets", "native", "tests", "tools", "docs", ".scratch/shared")
 
 
