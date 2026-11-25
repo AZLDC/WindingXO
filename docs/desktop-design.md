@@ -96,3 +96,8 @@ Loading與固定框架先使用assets/cursors/black-dot.png；進入登入或桌
 interaction.css接管一般區域、操作按鈕與文字輸入框；input／textarea同樣使用水晶滑鼠游標，原生文字插入線保留，resize-handle及對話框標題沿用縮放／移動游標，禁用控制為not-allowed。背景頁、pagehide及winding:idle停止動畫，visibilitychange、pageshow或winding:resume恢復；黑屏沿用黑點游標。模擬關機頁不載入水晶動畫或加上crystal-cursor類別，僅保留黑點游標；cursor.js也以該類別作為啟動條件。
 
 幾何來源tools/crystal-cursor-source.js保留中空及V字凹口，以薄晶面沿長軸旋轉。tools/build-cursors.mjs用無視窗Edge離線產生PNG及幀資料，網站執行時直接讀取專案資產，不下載外部圖片。
+
+
+## XP開機進度條
+
+進度條位於原640×480構圖的寬20%、高3%（128×14.4），依800×600虛擬畫面同比例放大。細灰框、黑底，不加外發光。三個小格以track寬度約5%取整數為格寬、間隔2px，每格採上下藍色漸層。群組寬度包含三格及兩段間隔；progressPhase在2.4秒內從0到1，位移由負群組寬度移到track右界，overflow:hidden只顯示框內部分，再回左側循環。動畫與滑鼠累計登入條件分開。

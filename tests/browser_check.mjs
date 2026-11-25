@@ -420,7 +420,7 @@ try {
         close(boot.width,800*fit);close(boot.height,600*fit);
         close(boot.x,(width-800*fit)/2);close(boot.y,(height-600*fit)/2);
         close(boot.artworkOffset,36*artScale);
-        close(boot.progressWidth,96*artScale);assert.equal(boot.background,'rgb(0, 0, 0)');
+        close(boot.progressWidth,128*artScale);assert.equal(boot.background,'rgb(0, 0, 0)');
         assert(boot.progressGap>=20*artScale&&boot.progressGap<=30*artScale,'boot artwork and progress spacing must scale together');
         assert(boot.x>=-.1&&boot.y>=-.1&&boot.x+boot.width<=width+.1&&boot.y+boot.height<=height+.1,'boot must fit without stretching or cropping');
         assert.equal(await inFrame('canvas.width===800&&canvas.height===600'),true,'boot renders at virtual 800x600');
@@ -429,6 +429,27 @@ try {
             await writeFile(join(process.env.WINDING_PREVIEW_DIR,'boot-1280.png'),Buffer.from(shot.data,'base64'));
         }
     }
+    assert.equal(await inFrame(`(()=>{
+        const group=document.getElementById('cells'),track=document.getElementById('track'),blocks=[...group.children],bar=document.querySelector('.progress'),style=getComputedStyle(blocks[0]);
+        const phase=progressPhase;
+        try{
+            if(blocks.length!==3||getComputedStyle(track).overflow!=='hidden'||getComputedStyle(bar).boxShadow!=='none'||style.backgroundImage.includes('90deg'))return false;
+            progressPhase=.5;progress();
+            const rects=blocks.map(c=>c.getBoundingClientRect());
+            if(!rects.every(r=>r.width>0)||rects[1].left<=rects[0].right||rects[2].left<=rects[1].right)return false;
+            progressPhase=0;progress();if(group.getBoundingClientRect().right>track.getBoundingClientRect().left+.1)return false;
+            progressPhase=1;progress();return group.getBoundingClientRect().left>=track.getBoundingClientRect().right-.1;
+        }finally{progressPhase=phase;progress();}
+    })()`),true,'XP progress must use three separated vertical-gradient blocks clipped on entry and exit');
+    assert.equal(await inFrame(`(()=>{
+        const original={last,spin,phase:progressPhase,render,progress,raf:requestAnimationFrame};
+        try{
+            render=()=>{};progress=()=>{};window.requestAnimationFrame=()=>0;
+            last=0;progressPhase=0;let halfway;
+            for(let i=0;i<=120;i++){tick(1000+i*20);if(i===60)halfway=progressPhase;}
+            return Math.abs(halfway-.5)<.0001&&(progressPhase<.0001||progressPhase>.9999);
+        }finally{last=original.last;spin=original.spin;progressPhase=original.phase;render=original.render;progress=original.progress;window.requestAnimationFrame=original.raf;}
+    })()`),true,'XP progress must travel half a cycle in 1.2s and loop in 2.4s');
     assert.equal(await evaluate('location.href'),url('index.html'));
     assert.equal(await evaluate('(()=>{const r=document.getElementById("appFrame").getBoundingClientRect();return r.width===innerWidth&&r.height===innerHeight;})()'),true);
     await inFrame(`(()=>{
