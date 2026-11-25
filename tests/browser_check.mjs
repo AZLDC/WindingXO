@@ -346,7 +346,7 @@ try {
     await until(()=>evaluate('location.pathname.endsWith("/shutdown.html")&&document.readyState==="complete"'),'browser shutdown');
     await until(()=>evaluate('document.querySelector("main").classList.contains("pixel-ready")'),'shutdown pixels and fonts ready');
     assert.equal(await evaluate('getComputedStyle(document.querySelector("main")).visibility'),'visible');
-    assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。（なんてね）');
+    assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。（うそです！）');
     await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
     await delay(30);
     assert.equal(await evaluate(`(()=>{
@@ -363,7 +363,7 @@ try {
         const ctx=document.getElementById('shutdownText').getContext('2d'),original=ctx.fillText,calls=[];
         ctx.fillText=function(text,x,y){calls.push({text,font:this.font,y});return original.call(this,text,x,y);};
         try{window.dispatchEvent(new Event('resize'));}finally{ctx.fillText=original;}
-        const body=calls.find(c=>c.text.includes('コンピューター')),note=calls.find(c=>c.text==='（なんてね）');
+        const body=calls.find(c=>c.text.includes('コンピューター')),note=calls.find(c=>c.text==='（うそです！）');
         return body&&note&&body.font.includes('12px')&&note.font.includes('8px')&&note.y>body.y;
     })()`),true,'parentheses and hiragana suffix must render smaller and lower than the main message');
     if(process.env.WINDING_PREVIEW_DIR){
