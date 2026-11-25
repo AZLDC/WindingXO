@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.scratch/local/
+texts/
+data/
+*.log
+graphify-out/
+.env
+.env.*
+!.env.example
+node_modules/
+.DS_Store
+Thumbs.db
