@@ -13,7 +13,7 @@
 - 保留Ctrl+S、Ctrl+Shift+S及Open／Delete／Compile／Active。Compile與Active仍只演出，虛擬文件單份上限2MiB，同名需確認覆寫；Delete原子移至資料庫的trash區。
 - 容量欄與Python版統一為`… GB · …% USED`。網頁版使用瀏覽器Storage API提供的本站儲存配額／使用量估計，並非整顆硬碟；無法取得時顯示`— GB · —% USED`，不虛構數值。Python版仍讀取App所在磁碟區。
 - 點擊頁面後可用Alt+Enter切換外層瀏覽器全螢幕；內容在框架內切頁，Esc或重新整理外層仍可能離開全螢幕。瀏覽器需要使用者互動及許可，無法保證載入即全螢幕。[Fullscreen API說明](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen)
-- 網頁版關機與登入電源顯示黑底灰白日文「コンピューターの電源を切ることができます。」（可以安心關機）。優先使用系統MS Gothic／MS UI Gothic舊字型，以12px粗體格點繪製、去除抗鋸齒並最多3倍整數放大（空間不足降為2倍或1倍），呈現早期點陣感；載入時先保持全黑，等系統字型、點陣繪製及放大尺寸就緒才顯示，避免小字閃現。不下載字型，無Canvas時以同色系文字顯示。未操作滿5分鐘進入既有全黑假關機狀態；鍵鼠喚醒後回Loading，再跑滑鼠累計5秒與登入流程，框架入口網址不變，文件保留。分頁也可由使用者直接關閉。普通網頁不能保證自行關閉使用者開啟的分頁。[瀏覽器關閉限制](https://developer.mozilla.org/en-US/docs/Web/API/Window/close)
+- 網頁版關機與登入電源顯示黑底灰白日文「コンピューターの電源を切ることができます。（偽）」，句尾以「偽」標明模擬畫面。優先使用系統MS Gothic／MS UI Gothic舊字型，以12px粗體格點繪製、去除抗鋸齒並最多3倍整數放大（空間不足降為2倍或1倍），呈現早期點陣感；載入時先保持全黑，等系統字型、點陣繪製及放大尺寸就緒才顯示，避免小字閃現。不下載字型，無Canvas時以同色系文字顯示。未操作滿5分鐘進入既有全黑假關機狀態；鍵鼠喚醒後回Loading，再跑滑鼠累計5秒與登入流程，框架入口網址不變，文件保留。分頁也可由使用者直接關閉。普通網頁不能保證自行關閉使用者開啟的分頁。[瀏覽器關閉限制](https://developer.mozilla.org/en-US/docs/Web/API/Window/close)
 
 ## Python版啟動
 

@@ -346,7 +346,7 @@ try {
     await until(()=>evaluate('location.pathname.endsWith("/shutdown.html")&&document.readyState==="complete"'),'browser shutdown');
     await until(()=>evaluate('document.querySelector("main").classList.contains("pixel-ready")'),'shutdown pixels and fonts ready');
     assert.equal(await evaluate('getComputedStyle(document.querySelector("main")).visibility'),'visible');
-    assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。');
+    assert.equal(await evaluate('document.querySelector("h1").textContent'),'コンピューターの電源を切ることができます。（偽）');
     await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
     await delay(30);
     assert.equal(await evaluate(`(()=>{
