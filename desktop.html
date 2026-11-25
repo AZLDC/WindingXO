@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Macrosoft Winding XO — Desktop</title>
+<link rel="stylesheet" href="interaction.css">
+<link rel="stylesheet" href="desktop.css">
+<link rel="stylesheet" href="angel.css">
+<script src="browser-api.js"></script>
+<script src="runtime.js"></script>
+<script defer src="activity.js"></script>
+<script defer src="avatar-mesh.js"></script>
+<script defer src="angel-visual.js"></script>
+<script defer src="editor-history.js"></script>
+<script defer src="desktop.js"></script>
+<script defer src="desktop-context.js"></script>
+</head>
+<body>
+<main id="workspace" aria-label="桌面">
+    <button class="shortcut" id="angel"><span class="angel-icon" aria-hidden="true">✧</span>Angel Player</button>
+    <section id="angelPlayer" class="angel-player" aria-label="Angel Player" hidden>
+        <header class="angel-header"><div><span class="angel-brand">✧ ANGEL PLAYER</span><span class="angel-subtitle">MATERIAL / SCRIPT CONTROL</span></div><div class="angel-controls"><button id="minimizeAngel" aria-label="最小化 Angel Player">_</button><button id="closeAngel" aria-label="關閉 Angel Player">×</button></div></header>
+        <div class="angel-body">
+        <aside id="fileSidebar" class="file-sidebar" aria-label="Angel Player 文件列表"><div class="library-heading"><span>FILES</span><button id="newFile" aria-label="新增文件">＋ NEW</button></div><div id="fileList" role="menu"></div><footer class="library-footer"><span id="fileCount">00 FILES</span><span>LOCAL</span></footer></aside>
+        <div id="visualStage" class="visual-stage">
+        <canvas id="angelCanvas" aria-label="旋轉刻度環與三維網格人形"></canvas>
+        <div class="visual-heading"><span>ANGEL PLAYER</span><small>BODY STRUCTURE / ANALYSIS</small><small id="diskUsage" class="disk-usage" aria-label="磁碟總容量與使用率">DISK …</small></div>
+        <section class="angel-details" aria-label="局部與文件詳細資料"><header>REGION / INSPECTION</header><dl><dt>REGION</dt><dd id="regionName">TORSO</dd><dt>FILE</dt><dd id="detailFilename">(null)</dd><dt>STATE</dt><dd id="detailState">—</dd><dt>SIZE</dt><dd id="detailSize">—</dd></dl><p id="regionDescription">Upper body contour and surface grid.</p></section>
+        <section id="regionControls" class="region-controls" aria-label="部位選擇"><div class="region-buttons"><button data-region="head" aria-pressed="false">HEAD</button><button data-region="torso" aria-pressed="true">TORSO</button><button data-region="arms" aria-pressed="false">ARMS</button><button data-region="legs" aria-pressed="false">LEGS</button></div></section>
+        <div class="visual-readout"><span>AXIS Y / <b id="rotationAngle">000.0°</b></span><span id="activeCount">00 ACTIVE</span></div>
+    <section id="editor" class="angel-editor" aria-label="Angel Player 文字編輯區" hidden>
+        <header class="titlebar"><span class="window-title">✧ <span id="editorTitle">Untitled - Angel Player</span></span><div class="window-controls"><button data-command="maximize" aria-label="最大化">□</button><button data-command="close" class="close" aria-label="關閉">×</button></div></header>
+            <textarea id="text" aria-label="文件內容" spellcheck="false" wrap="off"></textarea>
+    </section>
+        </div></div>
+    </section>
+</main>
+<div id="startMenu" class="start-menu" lang="ja" aria-label="スタート メニュー" hidden>
+    <header class="xp-user"><span aria-hidden="true">✧</span>ユーザー</header>
+    <div class="xp-menu-columns"><div class="xp-programs"><div class="xp-menu-item" aria-disabled="true"><span>🌐</span><div><strong>インターネット</strong><small>Internet Explorer</small></div></div><div class="xp-menu-item" aria-disabled="true"><span>✉</span><div><strong>電子メール</strong><small>Outlook Express</small></div></div><hr><p class="xp-menu-item" aria-disabled="true">アクセサリ</p><p class="xp-menu-item" aria-disabled="true">エンターテイメント</p><div class="xp-all-programs" aria-disabled="true">すべてのプログラム <span>▶</span></div></div><div class="xp-places" aria-hidden="true"><p>📁 マイ ドキュメント</p><p>▧ マイ ピクチャ</p><p>♫ マイ ミュージック</p><p>▣ マイ コンピュータ</p><hr><p>⚙ コントロール パネル</p><p>？ ヘルプとサポート</p><p>⌕ 検索</p><p>ファイル名を指定して実行</p></div></div>
+    <footer class="xp-power"><button id="logout"><span aria-hidden="true">⇥</span>ログオフ</button><button id="shutdown"><span aria-hidden="true">⏻</span>終了オプション</button></footer>
+</div>
+<div id="fileActions" class="file-actions" role="menu" aria-label="檔案操作" hidden>
+    <button role="menuitem" data-action="open">Open</button>
+    <button role="menuitem" data-action="delete">Delete</button>
+    <button role="menuitem" data-action="compile">Compile</button>
+    <button role="menuitem" data-action="activate" disabled>Active</button>
+</div>
+<footer class="taskbar"><button class="start" id="start" aria-expanded="false" aria-controls="startMenu"><span aria-hidden="true">▦</span> スタート</button><div id="tasks"><button id="angelTask" class="task" hidden>✧ Angel Player</button></div><time id="clock"></time></footer>
+<div id="contextMenu" class="context-menu" role="menu" aria-label="右鍵選單" hidden></div>
+<div id="modal" class="modal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><header class="titlebar" id="dialogTitle"></header><div class="dialog-body"><p id="dialogMessage"></p><input id="filename" aria-label="檔名" maxlength="180" autocomplete="off" hidden><div id="dialogButtons"></div></div></section></div>
+<section id="compileScreen" class="compile-screen" role="dialog" aria-modal="true" aria-labelledby="compileTitle" hidden>
+    <div class="compile-shell">
+        <span class="compile-corner tl"></span><span class="compile-corner br"></span>
+        <p class="compile-kicker">Macrosoft Winding XO</p>
+        <h1 id="compileTitle">COMPILE TERMINAL</h1>
+        <div class="compile-rule"></div>
+        <p id="compileFilename" class="compile-filename"></p>
+        <progress id="compileProgress" aria-label="Compile" max="100" value="0"></progress>
+        <div class="compile-footer"><span id="compilePercent" role="status">0%</span><button id="cancelCompile">CANCEL</button></div>
+        <p class="compile-hint">ANGEL SYSTEM · COMPILE</p>
+    </div>
+</section>
+</body>
+</html>

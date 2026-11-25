@@ -1,0 +1,10 @@
+{
+  "author": "さとむ (https://sketchfab.com/satomu)",
+  "license": "SKETCHFAB Standard (https://sketchfab.com/licenses)",
+  "source": "https://sketchfab.com/3d-models/anime-girl-body-low-poly-b2b267461d504a5b95976f367423d0b3",
+  "title": "Anime girl body low poly",
+  "sha256": "695075c00e871313ca71619329ed84579bb73048a8598538d90a297db7a1caf9",
+  "sourceVertices": 654,
+  "sourceTriangles": 1022,
+  "changes": "Scene transforms baked; uniformly scaled and centered; UV seams welded; two bounded surface subdivision passes; back of head rounded horizontally. Arms remain in the source T-pose."
+}

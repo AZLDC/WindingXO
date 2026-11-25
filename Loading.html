@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="zh-Hant">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Macrosoft Winding XO — Loading</title>
+        <link rel="stylesheet" href="interaction.css">
+        <script src="browser-api.js"></script>
+        <script src="runtime.js"></script>
+        <script defer src="activity.js"></script>
+        <style>
+            html,body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                background: #000;
+                overflow: hidden;
+                cursor: none;
+            }
+
+            * {
+                box-sizing: border-box
+            }
+
+            #stage {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 800px;
+                height: 600px;
+                transform: translate(-50%,-50%) scale(var(--boot-scale,1));
+                background: #000;
+                overflow: hidden
+            }
+
+            #bootContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 640px;
+                height: 480px;
+                transform-origin: top left;
+                transform: scale(1.25) translateY(36px);
+            }
+
+            canvas {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                display: block
+            }
+
+            .logo {
+                position: absolute;
+                left: 50%;
+                top: 57%;
+                transform: translate(-50%,-50%);
+                font-family: Arial,Helvetica,sans-serif;
+                color: #f0f4fb;
+                white-space: nowrap;
+                line-height: 1;
+                pointer-events: none
+            }
+
+            .word {
+                position: relative;
+                display: inline-block;
+                font-weight: 700;
+                letter-spacing: -.045em;
+                line-height: 1.1;
+                text-shadow: 0 0 3px #dcefff55
+            }
+
+            .xo {
+                position: absolute;
+                left: 100%;
+                top: .01em;
+                font-family: Arial,Helvetica,sans-serif;
+                color: #c77d4e;
+                line-height: 1;
+                white-space: nowrap;
+                letter-spacing: -.035em;
+                font-size: .6em;
+                font-weight: 700;
+                text-shadow: none
+            }
+
+            .brand {
+                position: absolute;
+                left: -.35em;
+                bottom: calc(100% + -.61em);
+                font-size: .29em;
+                font-weight: 400;
+                white-space: nowrap;
+                letter-spacing: 0;
+                color: #e8f1fc;
+                line-height: 1.1
+            }
+
+            .progress {
+                position: absolute;
+                left: 50%;
+                top: calc(57% + 64px);
+                width: 15%;
+                height: 3.5%;
+                transform: translate(-50%,-50%);
+                border: 1.5px solid #b7c7d9;
+                border-radius: 5px;
+                background: #050a12;
+                box-sizing: border-box;
+                padding: 2px;
+                box-shadow: 0 0 3px #476fa855
+            }
+
+            .track {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                overflow: hidden
+            }
+
+            .cells {
+                position: absolute;
+                left: 0;
+                top: 0;
+                display: flex;
+                height: 100%;
+                gap: 0;
+                will-change: transform
+            }
+
+            .cell {
+                height: 100%;
+                flex: none;
+                background: linear-gradient(90deg,#164799,#3688e8,#8fc9ff,#235da9)
+            }
+        </style>
+    </head>
+    <body>
+        <div id="stage">
+            <div id="bootContent">
+            <canvas id="canvas"></canvas>
+            <div class="logo" id="logo">
+                <div class="word">
+                    Winding<span class="xo">XO</span>
+                    <span class="brand">Macrosoft</span>
+                </div>
+            </div>
+            <div class="progress">
+                <div class="track" id="track">
+                    <div class="cells" id="cells">
+                        <span class="cell"></span>
+                        <span class="cell"></span>
+                        <span class="cell"></span>
+                        <span class="cell"></span>
+                        <span class="cell"></span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <script>
+            // Macrosoft 的垂直偏移 calc(100% + (.14 + y)em)，y=-.75。
+            // 既有640×480構圖放入800×600虛擬畫面，再等比適配視窗，周圍維持黑色。
+            const stage = document.getElementById('stage')
+              , canvas = document.getElementById('canvas')
+              , gl = canvas.getContext('webgl', {
+                antialias: true,
+                alpha: false,
+                depth: true
+            });
+            const p = {
+                anchorX: 64,
+                anchorY: 50,
+                modelScale: .75,
+                roll: 53,
+                pitch: 0,
+                yaw: -1,
+                pivot: 0,
+                speed: -180,
+                textX: 50,
+                textY: 57,
+                textScale: 1,
+                xoX: 0,
+                xoY: -.8,
+                xoScale: .6,
+                xoWeight: 700,
+                macrosoftX: -.35,
+                macrosoftY: -.75,
+                macrosoftScale: .29,
+                macrosoftWeight: 400,
+                turns: 5,
+                height: 6,
+                radius: 2,
+                taper: .5,
+                minWidth: .6,
+                maxWidth: .9,
+                curve: 1,
+                bow: -.3,
+                base: .05,
+                yellowExtra: .6,
+                transition: .25,
+                lx: -.8,
+                ly: -1,
+                lz: 0,
+                ambient: .2,
+                intensity: 1,
+                specular: .75,
+                shininess: 64
+            };
+            let vertices = []
+              , tris = []
+              , normals = []
+              , spin = 0
+              , camYaw = .75
+              , camElev = .32
+              , last = 0;
+            const VS = `attribute vec3 aP;attribute vec3 aN;attribute float aT;
+varying vec3 vN;varying float vT;uniform vec2 uAnchor;uniform float uScale,uAspect,uDepth;
+void main(){float perspective=7.5/(7.5-aP.z/uDepth);
+gl_Position=vec4(aP.x*uScale*perspective/uAspect+uAnchor.x,aP.y*uScale*perspective+uAnchor.y,clamp(-aP.z/(uDepth*3.),-.98,.98),1.);vN=aN;vT=aT;}`;
+            const FS = `precision highp float;varying vec3 vN;varying float vT;uniform vec3 uLight;
+uniform float uAmbient,uIntensity,uSpecular,uShininess,uLighting,uGloss,uYellowHold,uTransition;
+vec3 palette(float t){vec3 a=vec3(1.,.886,.137),b=vec3(.353,.824,.961),c=vec3(.357,.859,.2),d=vec3(1.,.576,.145),e=vec3(.949,.161,.118);
+float y=clamp(uYellowHold,0.,.37),z=min(.49,y+uTransition);
+if(t<y)return a;if(t<z)return mix(a,b,smoothstep(y,z,t));if(t<.6)return mix(b,c,smoothstep(z,.6,t));if(t<.8)return mix(c,d,smoothstep(.6,.8,t));return mix(d,e,smoothstep(.8,1.,t));}
+void main(){vec3 base=palette(vT);if(uLighting<.5){gl_FragColor=vec4(base,1.);return;}
+vec3 n=normalize(vN);if(!gl_FrontFacing)n=-n;vec3 l=normalize(uLight);
+float diffuse=max(0.,dot(n,l));float spec=0.;if(uGloss>.5&&diffuse>0.){vec3 h=normalize(l+vec3(0.,0.,1.));spec=pow(max(0.,dot(n,h)),uShininess)*uSpecular;}
+gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,1.),1.);}`;
+            function compile(type, src) {
+                const s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+                    throw Error(gl.getShaderInfoLog(s));
+                return s
+            }
+            let program;
+            if (!gl) {
+                document.body.textContent = 'This browser does not support WebGL';
+                throw Error('WebGL unavailable')
+            }
+            program = gl.createProgram();
+            gl.attachShader(program, compile(gl.VERTEX_SHADER, VS));
+            gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FS));
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+                throw Error(gl.getProgramInfoLog(program));
+            gl.useProgram(program);
+            const attrs = {
+                p: gl.getAttribLocation(program, 'aP'),
+                n: gl.getAttribLocation(program, 'aN'),
+                t: gl.getAttribLocation(program, 'aT')
+            };
+            const un = {};
+            for (const k of ['uAnchor', 'uScale', 'uAspect', 'uDepth', 'uLight', 'uAmbient', 'uIntensity', 'uSpecular', 'uShininess', 'uLighting', 'uGloss', 'uYellowHold', 'uTransition'])
+                un[k] = gl.getUniformLocation(program, k);
+            const buffer = gl.createBuffer()
+              , sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+              , cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+              , unit = a => {
+                let m = Math.hypot(a[0], a[1], a[2]) || 1;
+                return a.map(x => x / m)
+            }
+              , rad = d => d * Math.PI / 180;
+            const rz = (q, a) => [q[0] * Math.cos(a) - q[1] * Math.sin(a), q[0] * Math.sin(a) + q[1] * Math.cos(a), q[2]];
+            const rx = (q, a) => [q[0], q[1] * Math.cos(a) - q[2] * Math.sin(a), q[1] * Math.sin(a) + q[2] * Math.cos(a)];
+            function build() {
+                vertices = [];
+                tris = [];
+                const N = 240
+                  , M = 18
+                  , id = (i, k, j) => i * (M + 1) * 2 + k * (M + 1) + j
+                  , mn = Math.min(p.minWidth, p.maxWidth)
+                  , mx = Math.max(p.minWidth, p.maxWidth);
+                for (let i = 0; i <= N; i++) {
+                    const t = i / N
+                      , a = t * p.turns * 2 * Math.PI - .8
+                      , cs = Math.cos(a)
+                      , sn = Math.sin(a);
+                    let r = p.base + (p.radius - p.base) * Math.pow(t, .84)
+                      , edge = Math.max(0, (t - .78) / .22);
+                    r *= 1 - p.taper * edge * edge * (3 - 2 * edge);
+                    const width = mn + (mx - mn) * Math.pow(t, p.curve)
+                      , bow = p.bow * width / Math.max(mx, .001);
+                    for (let k = 0; k < 2; k++)
+                        for (let j = 0; j <= M; j++) {
+                            const u = 2 * j / M - 1
+                              , dr = .165 * width * u - bow * (1 - u * u) + k * .035;
+                            vertices.push({
+                                v: [(r + dr) * cs, (r + dr) * sn, (t - .5) * p.height + .4725 * width * u],
+                                t
+                            });
+                        }
+                }
+                const tri = (a, b, c) => tris.push([a, b, c]);
+                for (let i = 0; i < N; i++)
+                    for (let j = 0; j < M; j++)
+                        for (let k = 0; k < 2; k++) {
+                            const a = id(i, k, j)
+                              , b = id(i + 1, k, j)
+                              , c = id(i + 1, k, j + 1)
+                              , d = id(i, k, j + 1);
+                            if (k) {
+                                tri(c, b, a);
+                                tri(d, c, a)
+                            } else {
+                                tri(a, b, c);
+                                tri(a, c, d)
+                            }
+                        }
+                for (let i = 0; i < N; i++)
+                    for (const j of [0, M]) {
+                        const a = id(i, 0, j)
+                          , b = id(i + 1, 0, j)
+                          , c = id(i + 1, 1, j)
+                          , d = id(i, 1, j);
+                        tri(a, b, c);
+                        tri(a, c, d)
+                    }
+                for (const i of [0, N])
+                    for (let j = 0; j < M; j++) {
+                        const a = id(i, 0, j)
+                          , b = id(i, 0, j + 1)
+                          , c = id(i, 1, j + 1)
+                          , d = id(i, 1, j);
+                        tri(a, b, c);
+                        tri(a, c, d)
+                    }
+                normals = vertices.map( () => [0, 0, 0]);
+                for (const [a,b,c] of tris) {
+                    const n = cross(sub(vertices[b].v, vertices[a].v), sub(vertices[c].v, vertices[a].v));
+                    for (const i of [a, b, c])
+                        for (let k = 0; k < 3; k++)
+                            normals[i][k] += n[k]
+                }
+                normals = normals.map(unit)
+            }
+            function view(q) {
+                const cy = Math.cos(camYaw)
+                  , sy = Math.sin(camYaw)
+                  , ce = Math.cos(camElev)
+                  , se = Math.sin(camElev)
+                  , x = q[0] * cy - q[1] * sy
+                  , d = q[0] * sy + q[1] * cy;
+                return [x, q[2] * ce - d * se, q[2] * se + d * ce]
+            }
+            function posed(q, pivot) {
+                let v = rz(q, spin);
+                v = sub(v, pivot);
+                v = rz(v, rad(p.yaw));
+                v = rx(v, rad(p.pitch));
+                return [v[0] + pivot[0], v[1] + pivot[1], v[2] + pivot[2]]
+            }
+            function rotatedNormal(n) {
+                let v = rz(n, spin);
+                v = rz(v, rad(p.yaw));
+                v = rx(v, rad(p.pitch));
+                v = view(v);
+                const a = rad(p.roll)
+                  , c = Math.cos(a)
+                  , s = Math.sin(a);
+                return unit([v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]])
+            }
+            function frameData() {
+                const pivot = [0, 0, -p.height / 2 + p.pivot]
+                  , pv = view(pivot)
+                  , c = Math.cos(rad(p.roll))
+                  , s = Math.sin(rad(p.roll));
+                const points = vertices.map(o => {
+                    const q = view(posed(o.v, pivot))
+                      , x = q[0] - pv[0]
+                      , y = q[1] - pv[1];
+                    return [x * c - y * s, x * s + y * c, q[2]]
+                }
+                );
+                const ns = normals.map(rotatedNormal)
+                  , data = new Float32Array(tris.length * 21);
+                let offset = 0;
+                for (const tri of tris)
+                    for (const i of tri) {
+                        for (const a of points[i])
+                            data[offset++] = a;
+                        for (const a of ns[i])
+                            data[offset++] = a;
+                        data[offset++] = vertices[i].t
+                    }
+                return data
+            }
+            function render() {
+                const w = 800, h = 600, dw = w, dh = h;
+                if (canvas.width !== dw || canvas.height !== dh) {
+                    canvas.width = dw;
+                    canvas.height = dh
+                }
+                gl.viewport(0, 0, dw, dh);
+                gl.clearColor(0, 0, 0, 1);
+                gl.clearDepth(1);
+                gl.enable(gl.DEPTH_TEST);
+                gl.depthFunc(gl.LEQUAL);
+                gl.disable(gl.CULL_FACE);
+                gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+                const data = frameData();
+                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+                gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+                for (const [key,size,offset] of [['p', 3, 0], ['n', 3, 12], ['t', 1, 24]]) {
+                    const a = attrs[key];
+                    if (a < 0)
+                        continue;
+                    gl.enableVertexAttribArray(a);
+                    gl.vertexAttribPointer(a, size, gl.FLOAT, false, 28, offset)
+                }
+                const extent = Math.max(p.height, p.radius * 2.6)
+                  , scale = Math.min(w, h) * .7 * p.modelScale / extent;
+                gl.uniform2f(un.uAnchor, p.anchorX / 50 - 1, 1 - p.anchorY / 50);
+                gl.uniform1f(un.uScale, scale / (h * .5));
+                gl.uniform1f(un.uAspect, w / h);
+                gl.uniform1f(un.uDepth, Math.max(extent / 4, 1));
+                const light = unit([p.lx, p.ly, p.lz]);
+                gl.uniform3f(un.uLight, light[0], light[1], light[2]);
+                for (const k of ['ambient', 'intensity', 'specular', 'shininess'])
+                    gl.uniform1f(un['u' + k[0].toUpperCase() + k.slice(1)], p[k]);
+                gl.uniform1f(un.uLighting, 1);
+                gl.uniform1f(un.uGloss, 1);
+                gl.uniform1f(un.uYellowHold, Math.min(.37, .06 + p.yellowExtra / p.turns));
+                gl.uniform1f(un.uTransition, p.transition);
+                gl.drawArrays(gl.TRIANGLES, 0, data.length / 7)
+            }
+            function resizeLogo() {
+                stage.style.setProperty('--boot-scale', Math.min(innerWidth/800,innerHeight/600));
+                const width = document.getElementById('bootContent').clientWidth;
+                document.getElementById('logo').style.fontSize = Math.max(12, width * .093 * p.textScale) + 'px'
+            }
+            const cells = document.getElementById('cells')
+              , track = document.getElementById('track');
+            let progressPhase = 0;
+            function progress() {
+                const w = track.clientWidth;
+                if (!w)
+                    return;
+                const cw = w * .08;
+                for (const c of cells.children)
+                    c.style.width = cw + 'px';
+                const span = 5 * cw;
+                cells.style.transform = `translateX(${-span + progressPhase * (w + span)}px)`
+            }
+            function tick(time) {
+                const dt = last ? Math.min(.06, (time - last) / 1000) : 0;
+                last = time;
+                spin += rad(p.speed) * dt;
+                progressPhase = (progressPhase + dt / 4) % 1;
+                render();
+                progress();
+                requestAnimationFrame(tick)
+            }
+            // 所有動畫一開始就顯示；畫面不使用淡入或轉場。
+            build();
+            resizeLogo();
+            requestAnimationFrame(tick);
+            addEventListener('resize', resizeLogo);
+        </script>
+        <div id="missingLogin" hidden style="position:fixed;left:50%;bottom:5%;transform:translateX(-50%);font:14px Arial,sans-serif;color:#9deafa;background:#071724;border:1px solid #38bde0;padding:12px 18px;z-index:10;cursor:default">找不到同一資料夾中的 login.html</div>
+
+        <script>
+            // 開機畫面只隱藏本頁的滑鼠；離開頁面即恢復瀏覽器原本的游標。
+            // 瀏覽器通常不允許網頁載入時自動全螢幕，所以失敗時維持滿版顯示。
+            (function () {
+                let entering = false;
+                const loginUrl = new URL('./login.html', location.href);
+
+                async function tryFullscreen() {
+                    if (window.windingNative) return;
+                    if (document.fullscreenElement || !document.documentElement.requestFullscreen) return;
+                    try { await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); }
+                    catch (_) { /* 沒有使用者手勢時可能遭瀏覽器拒絕 */ }
+                }
+
+                // 開啟頁面時嘗試全螢幕，但不依賴請求一定成功。
+                tryFullscreen();
+
+                async function enterLogin() {
+                    if (entering) return;
+                    entering = true;
+                    // 不將 login.html 內嵌在本頁，而是前往同資料夾的獨立頁面。
+                    // file:// 無法可靠透過 fetch/HEAD 判斷檔案是否存在，直接以相對路徑開啟。
+                    if (location.protocol === 'file:') {
+                        location.assign(loginUrl.href);
+                        return;
+                    }
+                    try {
+                        const response = await fetch(loginUrl.href, { method: 'HEAD', cache: 'no-store' });
+                        if (!response.ok) throw new Error('Login page not found');
+                        location.assign(loginUrl.href);
+                    } catch (_) {
+                        entering = false;
+                        const warning = document.getElementById('missingLogin');
+                        warning.hidden = false;
+                    }
+                }
+
+                window.addEventListener('winding:boot-ready', enterLogin);
+                document.addEventListener('keydown', event => {
+                    if (event.key.toLowerCase() === 'f') tryFullscreen();
+                });
+            }());
+        </script>
+    </body>
+</html>
