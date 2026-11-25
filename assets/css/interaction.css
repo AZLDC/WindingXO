@@ -1,4 +1,9 @@
 /* 介面文字不可反白；只有可編輯的文字欄位保留原生選取。 */
 *{-webkit-user-select:none;user-select:none}
 textarea,input{-webkit-user-select:text;user-select:text}
-#idleScreen{position:fixed;inset:0;z-index:2147483647;background:#000;cursor:none;outline:none}
+html,body{cursor:url('../cursors/black-dot.png') 0 0,none}
+html.crystal-cursor{--crystal-cursor:url('../cursors/crystal-arrow.png') 3 2,default}
+html.crystal-cursor,html.crystal-cursor body,html.crystal-cursor :is(button,a,select,summary,label,[role=button]){cursor:var(--crystal-cursor)}
+html.crystal-cursor :is(input,textarea,[contenteditable=true]){cursor:text}
+html.crystal-cursor :is(button,input,select,textarea):disabled{cursor:not-allowed}
+#idleScreen{position:fixed;inset:0;z-index:2147483647;background:#000;cursor:url('../cursors/black-dot.png') 0 0,none;outline:none}

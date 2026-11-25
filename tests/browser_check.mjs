@@ -18,7 +18,7 @@ if(process.env.WINDING_HTTP==='1'){
             const relative=path.slice('/WindingXO/'.length)||'index.html';
             if(relative.includes('..')||(!relative.startsWith('assets/')&&!/^[\w-]+\.html$/.test(relative))){response.writeHead(404).end();return;}
             const content=await readFile(resolve(relative));
-            const type=relative.endsWith('.html')?'text/html':relative.endsWith('.css')?'text/css':relative.endsWith('.js')?'text/javascript':'application/json';
+            const type=relative.endsWith('.html')?'text/html':relative.endsWith('.css')?'text/css':relative.endsWith('.js')?'text/javascript':relative.endsWith('.png')?'image/png':relative.endsWith('.gif')?'image/gif':'application/json';
             response.writeHead(200,{'Content-Type':`${type}; charset=utf-8`});
             response.end(request.method==='HEAD'?undefined:content);
         }catch(_){response.writeHead(404).end();}
@@ -92,6 +92,25 @@ try {
     assert.equal(await evaluate('typeof window.WindingHistory'),'function','editor needs explicit undo history');
     await send('Emulation.setFocusEmulationEnabled',{enabled:true});
     await until(()=>evaluate('document.hasFocus()'),'headless page focus');
+    assert.equal(await evaluate(`(()=>{
+        const d=window.windingCursorFrames;
+        return d.frames.length===96&&new Set(d.frames).size>20&&d.width===32&&d.height===32&&d.hotspot.join(',')==='3,2'&&d.duration===6000&&getComputedStyle(document.body).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#newFile')).cursor.includes('data:image/png')&&getComputedStyle(document.querySelector('#text')).cursor==='text'&&getComputedStyle(document.querySelector('.resize-handle[data-edge="e"]')).cursor==='ew-resize';
+    })()`),true,'stored crystal frames apply to normal controls and preserve text/resize cursors');
+    assert.equal(await evaluate(`(async()=>{
+        const image=new Image();image.src=windingCursorFrames.frames[0];await image.decode();
+        const c=document.createElement('canvas');c.width=c.height=32;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);
+        const alpha=(x,y)=>ctx.getImageData(x,y,1,1).data[3];
+        return image.width===32&&image.height===32&&alpha(11,10)===0&&alpha(18,17)===0&&alpha(5,6)>0;
+    })()`),true,'crystal PNG must keep its transparent center and recessed tail');
+    const cursorBefore=await evaluate('document.documentElement.dataset.cursorFrame');
+    await delay(150);
+    assert.notEqual(await evaluate('document.documentElement.dataset.cursorFrame'),cursorBefore,'crystal must rotate');
+    await evaluate('window.dispatchEvent(new Event("winding:idle"))');
+    const cursorPaused=await evaluate('document.documentElement.dataset.cursorFrame');
+    await delay(150);
+    assert.equal(await evaluate('document.documentElement.dataset.cursorFrame'),cursorPaused,'idle must stop cursor animation');
+    await evaluate('window.dispatchEvent(new Event("winding:resume"))');
+    await until(()=>evaluate(`document.documentElement.dataset.cursorFrame!==${JSON.stringify(cursorPaused)}`),'cursor resumes after idle');
     await send('Input.dispatchMouseEvent',{type:'mousePressed',x:10,y:10,button:'left',clickCount:1});
     await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:10,y:10,button:'left',clickCount:1});
     assert.equal(await evaluate('navigator.userActivation.isActive'),true,'fullscreen requires completed user activation');

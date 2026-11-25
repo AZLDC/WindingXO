@@ -15,6 +15,13 @@
 - 點擊頁面後可用Alt+Enter切換外層瀏覽器全螢幕；內容在框架內切頁，Esc或重新整理外層仍可能離開全螢幕。瀏覽器需要使用者互動及許可，無法保證載入即全螢幕。[Fullscreen API說明](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestFullscreen)
 - 網頁版關機與登入電源顯示黑底灰白日文「コンピューターの電源を切ることができます。（うそです！）」，句尾以較小的「（うそです！）」表示「騙你的！」的玩笑語氣；括號及平假名均為主句字級的三分之二，靠下對齊。優先使用系統MS Gothic／MS UI Gothic舊字型，以12px粗體格點繪製、去除抗鋸齒並最多3倍整數放大（空間不足降為2倍或1倍），呈現早期點陣感；載入時先保持全黑，等系統字型、點陣繪製及放大尺寸就緒才顯示，避免小字閃現。不下載字型，無Canvas時以同色系文字顯示。未操作滿5分鐘進入既有全黑假關機狀態；鍵鼠喚醒後回Loading，再跑滑鼠累計5秒與登入流程，框架入口網址不變，文件保留。分頁也可由使用者直接關閉。普通網頁不能保證自行關閉使用者開啟的分頁。[瀏覽器關閉限制](https://developer.mozilla.org/en-US/docs/Web/API/Window/close)
 
+## 網站游標
+
+- Loading及閒置黑屏使用透明底、單一黑色像素的32×32游標；不修改作業系統的游標設定。
+- 登入、桌面及關機頁使用中空水晶箭頭，尾端有V字凹口。96幀PNG、每圈約6秒，點擊尖端固定於`3,2`；文字輸入保留I形、視窗邊緣保留縮放游標，禁用控制使用禁止游標。
+- 原始幾何在`tools/crystal-cursor-source.js`，正式資產在`assets/cursors/`，包含靜態圖、動畫幀及[動圖預覽](assets/cursors/crystal-preview.gif)。動畫在背景頁面及閒置黑屏停止，回到頁面或恢復介面時繼續。
+- 重建PNG與動畫幀資料：`node tools/build-cursors.mjs`，需要Node.js 22以上與Microsoft Edge；可用`WINDING_EDGE`指定Edge路徑。一般開啟網站不需要執行重建工具。
+
 ## Python版啟動
 
 Windows 10/11、Python 3.10 以上與 Microsoft Edge WebView2 Runtime。雙擊 `RUN.cmd`，首次會在 `.venv` 安裝相依套件，之後直接啟動。也可手動執行：
@@ -87,6 +94,7 @@ shutdown.html       日文安全關機畫面
 assets/css/         共用、XP及Angel樣式
 assets/js/          框架、儲存、編輯與動畫程式
 assets/models/      轉換後模型與來源授權
+assets/cursors/     水晶游標動畫、靜態圖及黑點游標
 native/             Python桌面入口、儲存與視窗狀態
 tests/              無視窗檢查與資料測試
 tools/              模型轉換、曲面修整及上傳封裝
