@@ -14,11 +14,12 @@ body{display:grid;place-items:center;text-align:center;user-select:none}
 main{padding:24px;visibility:hidden}
 .pixel-ready,.text-fallback{visibility:visible}
 h1{margin:0;font-size:16px;font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+h1 small{font-size:66.6667%}
 canvas{display:block;image-rendering:pixelated;max-width:100%}
 canvas[hidden]{display:none}
 .pixel-ready h1{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 </style>
 <noscript><style>main{visibility:visible}</style></noscript>
 </head>
-<body><main><h1>コンピューターの電源を切ることができます。（偽）</h1><canvas id="shutdownText" aria-hidden="true" hidden></canvas></main></body>
+<body><main><h1><span id="shutdownMessage">コンピューターの電源を切ることができます。</span><small id="shutdownAside">（なんてね）</small></h1><canvas id="shutdownText" aria-hidden="true" hidden></canvas></main></body>
 </html>
