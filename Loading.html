@@ -132,7 +132,36 @@
             .cell {
                 height: 100%;
                 flex: none;
-                background: linear-gradient(180deg,#20277e,#596cda 25%,#97a9ff 45%,#4256ca 60%,#272f89)
+            }
+
+            /* 左側方塊 */
+            .cell:nth-child(1) {
+                background: linear-gradient(180deg,
+                    #20277e 0%,
+                    #596cda 15%,
+                    #97a9ff 30%,
+                    #4256ca 45%,
+                    #272f89 75%);
+            }
+
+            /* 中間方塊 */
+            .cell:nth-child(2) {
+                background: linear-gradient(180deg,
+                    #20277e 0%,
+                    #596cda 20%,
+                    #97a9ff 40%,
+                    #4256ca 60%,
+                    #272f89 80%);
+            }
+
+            /* 右側方塊 */
+            .cell:nth-child(3) {
+                background: linear-gradient(180deg,
+                    #20277e 10%,
+                    #596cda 30%,
+                    #97a9ff 50%,
+                    #4256ca 70%,
+                    #272f89 90%);
             }
         </style>
     </head>
@@ -437,7 +466,7 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                 const w = track.clientWidth;
                 if (!w)
                     return;
-                const cw = Math.max(1, Math.round(w * .05));
+                const cw = Math.max(1, Math.round(w * .07));
                 for (const c of cells.children)
                     c.style.width = cw + 'px';
                 const gap = parseFloat(getComputedStyle(cells).gap) || 0;
