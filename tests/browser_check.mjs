@@ -435,12 +435,14 @@ try {
         try{
             if(blocks.length!==3||getComputedStyle(track).overflow!=='hidden'||getComputedStyle(bar).boxShadow!=='none'||style.backgroundImage.includes('90deg'))return false;
             progressPhase=.5;progress();
+            const links=blocks.map(c=>getComputedStyle(c,'::after'));
+            if(!links.slice(0,2).every(s=>s.content==='\"\"'&&s.backgroundColor==='rgb(17, 27, 87)'&&parseFloat(s.width)>0&&parseFloat(s.height)>0)||links[2].content!=='none')return false;
             const rects=blocks.map(c=>c.getBoundingClientRect());
             if(!rects.every(r=>r.width>0)||rects[1].left<=rects[0].right||rects[2].left<=rects[1].right)return false;
             progressPhase=0;progress();if(group.getBoundingClientRect().right>track.getBoundingClientRect().left+.1)return false;
             progressPhase=1;progress();return group.getBoundingClientRect().left>=track.getBoundingClientRect().right-.1;
         }finally{progressPhase=phase;progress();}
-    })()`),true,'XP progress must use three separated vertical-gradient blocks clipped on entry and exit');
+    })()`),true,'XP progress must retain three gradient blocks, two dark blue connectors, and clipped entry/exit');
     assert.equal(await inFrame(`(()=>{
         const original={last,spin,phase:progressPhase,render,progress,raf:requestAnimationFrame};
         try{
