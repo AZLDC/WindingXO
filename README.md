@@ -1,5 +1,7 @@
 # Macrosoft Winding XO
 
+**[直接開啟網頁版](https://azldc.github.io/WindingXO/)**
+
 可由瀏覽器獨立運作，也可由Python承載的同人玩具：XP風格桌面、日文開始功能表，以及黑與亮藍線框風格的Angel Player。文件內容只作文字處理，不執行Script。
 
 ## 獨立HTML版
