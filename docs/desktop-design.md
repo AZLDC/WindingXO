@@ -34,7 +34,15 @@ restart事件提供waitUntil，activity等待所有保存Promise完成才切Load
 
 ## 系統與文件邊界
 
-XP桌面及日文開始選單屬於系統層。開始選單只有登出返回login及關App兩個可操作項目，其他日文XP項目為靜態裝飾，沒有檔案列表或檔案子選單。登入右下電源同樣只關此App。登出經canLeave處理草稿，核准後以allowNavigation避免第二次beforeunload提示；原生視窗模式保持。
+開始選單的xp-menu-item、xp-all-programs與xp-places內各項目共用滑鼠移入藍底白字回饋，次要文字與箭頭一併反白；離開即恢復。外觀不依是否已有功能區分，尚未實作項目保留無動作，後續可逐項補上事件而不改既有反白規則。電源區沿用原有滑鼠移入效果。
+
+XP桌面及日文開始選單屬於系統層。開始選單提供Echochrome、登出返回login及關App，其餘日文XP項目為靜態裝飾，沒有檔案列表或檔案子選單。登入右下電源同樣只關此App。登出經canLeave處理草稿，核准後以allowNavigation避免第二次beforeunload提示；原生視窗模式保持。
+
+Echochrome由echochrome.js與echochrome.css獨立管理，使用fixed視窗且限制於工作列上方，標題列支援pointer capture拖曳及雙擊最大化／還原。最小化保留iframe與首頁搜尋詞，工作列可還原；關閉將iframe改為about:blank並清空網址記錄，重新開啟回白底搜尋首頁並清空搜尋詞。Angel前景時以visibility與inert隔離後方瀏覽器，不改動Angel編輯器幾何。
+
+搜尋首頁是iframe同層的echoHome，顯示時隱藏iframe並卸載外站，以about:blank作導覽記錄中的首頁，網址列顯示空白。標誌為GuguRu，以逐字span呈現藍／紅／黃／藍／綠／紅，h1提供完整無障礙名稱；使用Century Gothic／Futura／Trebuchet MS／Arial系統字型回退，字級42～64px，不下載專用字型。原生GET表單將q參數送往https://www.google.com/search，target=_blank搭配rel=noopener noreferrer，直接由使用者提交開新分頁；不使用需cx的Google官方嵌入元件或API。搜尋不新增iframe導覽記錄，從網址列導頁後可上一頁返回首頁。
+
+網頁以sandbox="allow-scripts allow-forms"的iframe載入，不授予同源、頂層導頁、彈出視窗或原生API存取。僅接受不含帳密的HTTP(S)網址，其他協定在網址欄顯示日文驗證訊息。前後頁只追蹤網址列提交，不能讀取跨來源內容、連結或重新導向；iframe的load事件只用作載入觀測，不判定網站顯示成功。Google等網站可用X-Frame-Options／CSP拒絕嵌入，不提供代理；首頁表單的新分頁搜尋不受iframe嵌入限制。跨來源輸入無法回傳既有閒置計時，首頁表單則沿用桌面輸入事件。
 
 Angel Player點開後覆蓋整個App內容範圍（fixed inset:0），沒有外框、桌面留邊或XP工作列／開始功能表。以點擊來源圖示的中心作650ms圓形展開，半徑足以覆蓋最遠角落；最小化／關閉取消未完成動畫並恢復XP工作列，工作列保留四芒星✧識別供還原。此顯示模式不切換原生全螢幕，Alt+Enter及視窗記憶沿用。左側文件列表常駐，空時(null)，純文字檔隱藏.txt但用完整檔名識別。子選單只含Open／Delete／Compile／Active或Deactive，向右延伸且限制在畫面內，捲動不顯示捲軸。
 

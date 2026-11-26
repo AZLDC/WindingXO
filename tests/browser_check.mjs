@@ -7,6 +7,7 @@ import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
 import {createServer} from 'node:http';
+import {checkEchochrome} from './echochrome_flow.mjs';
 
 // 額外以GitHub專案網站的子路徑測試，確認相對資產與HEAD導頁可用。
 let server,baseURL;
@@ -87,6 +88,7 @@ try {
     };
     await send('Runtime.enable');await send('Page.enable');
     await navigate('desktop.html');
+    await checkEchochrome({evaluate,send,click,until});
     assert.equal(await evaluate('typeof window.getWindingAPI'), 'function','HTML must provide a standalone API');
     assert.equal(await evaluate('Boolean(window.getWindingAPI())'),true);
     assert.equal(await evaluate('typeof window.WindingHistory'),'function','editor needs explicit undo history');

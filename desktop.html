@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="assets/css/interaction.css?v=crystal2">
 <link rel="stylesheet" href="assets/css/desktop.css">
 <link rel="stylesheet" href="assets/css/angel.css">
+<link rel="stylesheet" href="assets/css/echochrome.css">
 <script src="assets/js/browser-api.js"></script>
 <script src="assets/js/runtime.js"></script>
 <script defer src="assets/js/activity.js"></script>
@@ -16,6 +17,7 @@
 <script defer src="assets/js/editor-history.js"></script>
 <script defer src="assets/js/desktop.js"></script>
 <script defer src="assets/js/desktop-context.js"></script>
+<script defer src="assets/js/echochrome.js"></script>
 </head>
 <body>
 <main id="workspace" aria-label="桌面">
@@ -37,9 +39,17 @@
         </div></div>
     </section>
 </main>
+<section id="echochrome" class="echochrome" aria-label="Echochrome" hidden>
+    <header id="echoTitlebar" class="echo-titlebar"><span class="echo-tab"><img class="echo-icon" src="assets/icons/echochrome.png" alt=""> Echochrome</span><div class="echo-controls"><button id="echoMinimize" aria-label="最小化 Echochrome">_</button><button id="echoMaximize" aria-label="最大化 Echochrome">□</button><button id="echoClose" aria-label="關閉 Echochrome">×</button></div></header>
+    <form id="echoNavigation" class="echo-navigation" aria-label="網頁導覽"><button id="echoBack" type="button" aria-label="上一頁" disabled>←</button><button id="echoForward" type="button" aria-label="下一頁" disabled>→</button><input id="echoAddress" aria-label="網址" type="text" autocomplete="off" spellcheck="false" placeholder="URL を入力"></form>
+    <section id="echoHome" class="echo-home" aria-label="Echochrome 検索" lang="ja" hidden>
+        <div class="echo-search-center"><h1 aria-label="GuguRu"><span aria-hidden="true">G</span><span aria-hidden="true">u</span><span aria-hidden="true">g</span><span aria-hidden="true">u</span><span aria-hidden="true">R</span><span aria-hidden="true">u</span></h1><form action="https://www.google.com/search" method="get" target="_blank" rel="noopener noreferrer"><input id="echoQuery" name="q" type="search" aria-label="Google で検索" autocomplete="off" required><button id="echoSearchButton" type="submit">Google で検索</button></form><p>検索結果は新しいタブで開きます。</p></div>
+    </section>
+    <iframe id="echoFrame" title="Echochrome 網頁" sandbox="allow-scripts allow-forms" referrerpolicy="no-referrer" src="about:blank"></iframe>
+</section>
 <div id="startMenu" class="start-menu" lang="ja" aria-label="スタート メニュー" hidden>
     <header class="xp-user"><span aria-hidden="true">✧</span>ユーザー</header>
-    <div class="xp-menu-columns"><div class="xp-programs"><div class="xp-menu-item" aria-disabled="true"><span>🌐</span><div><strong>インターネット</strong><small>Internet Explorer</small></div></div><div class="xp-menu-item" aria-disabled="true"><span>✉</span><div><strong>電子メール</strong><small>Outlook Express</small></div></div><hr><p class="xp-menu-item" aria-disabled="true">アクセサリ</p><p class="xp-menu-item" aria-disabled="true">エンターテイメント</p><div class="xp-all-programs" aria-disabled="true">すべてのプログラム <span>▶</span></div></div><div class="xp-places" aria-hidden="true"><p>📁 マイ ドキュメント</p><p>▧ マイ ピクチャ</p><p>♫ マイ ミュージック</p><p>▣ マイ コンピュータ</p><hr><p>⚙ コントロール パネル</p><p>？ ヘルプとサポート</p><p>⌕ 検索</p><p>ファイル名を指定して実行</p></div></div>
+    <div class="xp-menu-columns"><div class="xp-programs"><button id="openEchochrome" class="xp-menu-item echo-menu-item"><img class="echo-icon" src="assets/icons/echochrome.png" alt=""><span><strong>Echochrome</strong><small>無限回廊ブラウザ</small></span></button><div class="xp-menu-item" aria-disabled="true"><span>✉</span><div><strong>電子メール</strong><small>Outlook Express</small></div></div><hr><p class="xp-menu-item" aria-disabled="true">アクセサリ</p><p class="xp-menu-item" aria-disabled="true">エンターテイメント</p><div class="xp-all-programs" aria-disabled="true">すべてのプログラム <span>▶</span></div></div><div class="xp-places" aria-hidden="true"><p>📁 マイ ドキュメント</p><p>▧ マイ ピクチャ</p><p>♫ マイ ミュージック</p><p>▣ マイ コンピュータ</p><hr><p>⚙ コントロール パネル</p><p>？ ヘルプとサポート</p><p>⌕ 検索</p><p>ファイル名を指定して実行</p></div></div>
     <footer class="xp-power"><button id="logout"><span aria-hidden="true">⇥</span>ログオフ</button><button id="shutdown"><span aria-hidden="true">⏻</span>終了オプション</button></footer>
 </div>
 <div id="fileActions" class="file-actions" role="menu" aria-label="檔案操作" hidden>
@@ -48,7 +58,7 @@
     <button role="menuitem" data-action="compile">Compile</button>
     <button role="menuitem" data-action="activate" disabled>Active</button>
 </div>
-<footer class="taskbar"><button class="start" id="start" aria-expanded="false" aria-controls="startMenu"><span aria-hidden="true">▦</span> スタート</button><div id="tasks"><button id="angelTask" class="task" hidden>✧ Angel Player</button></div><time id="clock"></time></footer>
+<footer class="taskbar"><button class="start" id="start" aria-expanded="false" aria-controls="startMenu"><span aria-hidden="true">▦</span> スタート</button><div id="tasks"><button id="angelTask" class="task" hidden>✧ Angel Player</button><button id="echoTask" class="task" hidden><img class="echo-icon" src="assets/icons/echochrome.png" alt=""> Echochrome</button></div><time id="clock"></time></footer>
 <div id="contextMenu" class="context-menu" role="menu" aria-label="右鍵選單" hidden></div>
 <div id="modal" class="modal" hidden><section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><header class="titlebar" id="dialogTitle"></header><div class="dialog-body"><p id="dialogMessage"></p><input id="filename" aria-label="檔名" maxlength="180" autocomplete="off" hidden><div id="dialogButtons"></div></div></section></div>
 <section id="compileScreen" class="compile-screen" role="dialog" aria-modal="true" aria-labelledby="compileTitle" hidden>

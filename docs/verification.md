@@ -34,6 +34,12 @@ node tests/browser_check.mjs
 
 `WINDING_PREVIEW_DIR`可指定截圖輸出目錄，未設定時不產生截圖。瀏覽器測試使用虛擬時鐘檢查5秒移動、5秒觸控長按及5分鐘閒置邊界，不需等待實際時間。觸控使用瀏覽器的手機觸控模擬，涵蓋未滿5秒、放開／取消重算、圖案區排除、回到黑色背景重計、PointerEvent與TouchEvent相容路徑，再重新載入確認滑鼠仍可進登入。關機頁另外暫停文字程式的HTTP請求，檢查像素繪製及放大前畫面維持全黑。
 
+Echochrome的`tests/echochrome_flow.mjs`由主瀏覽器測試呼叫，以臨時HTTP站點驗證iframe實際導頁、前後頁與分支截斷、協定／帳密網址拒絕、最小化還原、最大化還原、關閉重開及Angel前景隔離。1280×800與390×844檢查視窗邊界、控制項重疊與裁切，截圖及幾何稽核固定存於`.scratch/local/echochrome/`；此項不受`WINDING_PREVIEW_DIR`控制。
+
+白底搜尋首頁以無視窗瀏覽器點擊搜尋按鈕，確認實際產生Google搜尋新分頁、中文與符號的q參數編碼正確，且原視窗保留首頁。桌面／手機首頁截圖存為home-1280.png、home-390.png，並檢查搜尋框與按鈕未裁切；另驗證上一頁返回首頁與關閉重開清空搜尋詞。不以搜尋分頁成功建立宣稱外部搜尋結果內容已驗證；結果仍受網路、Google服務與瀏覽器設定影響。原生Python容器的新視窗行為需另作實測。
+
+測試站通過只代表iframe導覽與視窗機制可用，不代表Google能嵌入。隔離iframe可能作為獨立瀏覽器程序，實際導頁同時檢查frame tree及iframe target。
+
 ## 語法檢查
 
 ```powershell
