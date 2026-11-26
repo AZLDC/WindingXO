@@ -3,7 +3,7 @@ window.windingNative = navigator.userAgent.includes('WindingXO-Native');
 let frameAPI;
 if(window!==window.top) {
     const calls=new Map();
-    const methods=['list_files','read_file','save_file','delete_file','get_disk_usage','toggle_fullscreen','close_app'];
+    const methods=['list_files','list_catalog','compile_file','invalidate_file','activate_file','rename_file','read_file','save_file','delete_file','get_disk_usage','toggle_fullscreen','close_app'];
     frameAPI=Object.fromEntries(methods.map(method=>[method,(...args)=>new Promise(resolve=>{
         const id=crypto.randomUUID();
         const timer=setTimeout(()=>{calls.delete(id);resolve({ok:false,error:'本機服務回應逾時。'});},15000);

@@ -34,7 +34,12 @@ function replaceSelection(content) {
     text.setRangeText(content,text.selectionStart,text.selectionEnd,'end');edited();text.focus();
 }
 document.addEventListener('contextmenu',event=>{
-    event.preventDefault();hideContextMenu();hideActions();
+    event.preventDefault();hideContextMenu();
+    const fileRow=event.target.closest('.file-row');
+    if(fileRow && !player.hidden && !busy && $('modal').hidden && $('compileScreen').hidden && !$('idleScreen')) {
+        showActions(fileRow,true,true);return;
+    }
+    hideActions();
     if(busy || !$('modal').hidden || !$('compileScreen').hidden || $('idleScreen'))return;
     const target=event.target;
     if(!player.hidden) {

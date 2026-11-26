@@ -26,10 +26,10 @@ def run():
         errors=[]
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.expose_function('hostCall',lambda method,*args:getattr(api,method)(*args))
-        page.add_init_script('''const connect=()=>{
+        page.add_init_script('''if(window===window.top){const connect=()=>{
             window.pywebview={api:new Proxy({},{get:(_,method)=>(...args)=>window.hostCall(method,...args)})};
             window.dispatchEvent(new Event('pywebviewready'));
-        };if(sessionStorage.getItem('defer-api'))setTimeout(connect,500);else connect();''')
+        };if(sessionStorage.getItem('defer-api'))setTimeout(connect,500);else connect();}''')
         page.clock.install(time=0)
         page.clock.pause_at(1000)
 

@@ -34,7 +34,8 @@ body.angel-open #workspace{inset:0}body.angel-open .taskbar,body.angel-open #sta
 .angel-modal #dialogButtons button{border:1px solid #2c849c;border-radius:0;background:#062639;box-shadow:none;color:#9ce9ff;font:11px Consolas}
 .angel-modal #dialogButtons button:hover,.angel-modal #dialogButtons button:focus-visible{background:#0b4960;outline:1px solid #9ce9ff}
 @media(max-width:950px){.region-controls{width:155px;right:12px}}
-@media(max-width:650px){.angel-details{bottom:84px}.region-controls{left:10px;right:10px;bottom:36px;width:auto;padding:8px}}
+.mounted-skill{display:block}.mounted-skill+.mounted-skill{margin-top:6px}.angel-details{max-height:calc(100% - 260px);overflow:auto}
+@media(max-width:650px){.angel-details{bottom:84px;max-height:min(180px,calc(100% - 200px))}.region-controls{left:10px;right:10px;bottom:36px;width:auto;padding:8px}}
 
 /* 透明軌道只留下與編輯器邊框同色的滑條及方向三角。 */
 .angel-editor textarea::-webkit-scrollbar{width:12px;height:12px;background:transparent}

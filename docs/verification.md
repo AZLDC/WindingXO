@@ -21,6 +21,7 @@ node tests/browser_check.mjs
 | Python單元測試 | 文字保存、名稱／大小限制、視窗狀態、啟動參數、根目錄入口及上傳包排除規則 | 使用臨時目錄及假視窗，不開啟GUI；Windows缺少符號連結權限時跳過該項測試 |
 | `avatar_surface_check.mjs` | 後腦圓弧、左右對稱、前臉／身體控制點保護、細分面數及共用邊 | 直接檢查模型幾何，不啟動瀏覽器 |
 | `browser_check.mjs` | 預設文件、保存／另存／衝突、復原與重做、右鍵、Compile／Active、子選單、閒置保存及重登入、框架與關機 | 啟動無視窗Edge，使用獨立臨時瀏覽器設定檔 |
+| `catalog_check.py` | Python／瀏覽器JSON索引、舊資料庫升級、掛載及容量、固定消耗、改名取消／重名／草稿、重載保存與列表快取 | 無視窗Edge，臨時文件及瀏覽器設定檔；1280×800、800×600、390×844、640×480長名稱三能力版面稽核與截圖存於`.scratch/local/catalog/` |
 | 網頁版面 | 桌面／窄版對話框與選單、圓尺方向／標字／遮擋、模型顯示、800×600開機適配、關機點陣文字及載入前黑屏 | 納入`browser_check.mjs`；字型程式延遲載入的情境以HTTP模式檢查 |
 
 模擬GitHub Pages的`/WindingXO/`子路徑：
@@ -63,6 +64,7 @@ HTML中的內嵌JavaScript也屬於語法檢查範圍。
 .venv\Scripts\python.exe tests/boot_check.py
 .venv\Scripts\python.exe tests/idle_check.py
 .venv\Scripts\python.exe tests/compile_check.py
+.venv\Scripts\python.exe tests/catalog_check.py
 .venv\Scripts\python.exe tests/shutdown_check.py
 ```
 

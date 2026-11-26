@@ -31,6 +31,21 @@ class DesktopAPI:
     def list_files(self):
         return self._call(self._store.list)
 
+    def list_catalog(self):
+        return self._call(self._store.catalog)
+
+    def compile_file(self, name):
+        return self._call(self._store.compile, name)
+
+    def invalidate_file(self, name):
+        return self._call(self._store.invalidate, name)
+
+    def activate_file(self, name, region):
+        return self._call(self._store.activate, name, region)
+
+    def rename_file(self, name, new_name):
+        return self._call(self._store.rename, name, new_name)
+
     def get_disk_usage(self):
         def usage():
             total, used, free = shutil.disk_usage(ROOT)

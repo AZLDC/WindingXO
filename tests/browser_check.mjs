@@ -237,6 +237,7 @@ try {
     await click('.file-row[data-name="copy.txt"]');
     assert.equal(await evaluate('document.querySelector("[data-action=activate]").disabled'),false);
     await click('[data-action="activate"]');
+    await ready();
     assert.equal(await evaluate(`document.querySelector('.file-row[data-name="copy.txt"] span').textContent`),'●');
     for(const [width,height] of [[1280,800],[390,600]]) {
         await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
@@ -351,7 +352,7 @@ try {
     assert.equal(await evaluate('getWindingAPI().read_file("Untitled (1).txt").then(r=>r.value)'),'anonymous autosave');
     await navigate('desktop.html');
     await evaluate('api("list_files").then(async names=>{for(const name of names)await api("delete_file",name);})');
-    await evaluate('loadFiles()');
+    await evaluate('loadFiles(true)');
     assert.equal(await evaluate('document.querySelector("#fileList .empty").textContent'),'(null)');
     await navigate('desktop.html');
     assert.deepEqual(await evaluate('api("list_files")'),[],'empty library must not reseed');

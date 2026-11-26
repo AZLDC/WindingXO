@@ -37,7 +37,7 @@ def run():
         page.goto((ROOT/'desktop.html').as_uri())
         click('#start')
         assert page.locator('#startMenu #fileList').count()==0
-        assert page.locator('#startMenu button').count()==2
+        assert page.locator('#startMenu button').count()==3
         expect(page.locator('#start')).to_contain_text('スタート')
         expect(page.locator('#logout')).to_contain_text('ログオフ')
         expect(page.locator('#shutdown')).to_contain_text('終了オプション')
@@ -87,6 +87,7 @@ def run():
         expect(page.locator('#diskUsage')).to_have_text('DISK UNAVAILABLE')
         api.get_disk_usage=disk_usage
         page.evaluate('refreshDiskUsage()')
+        page.wait_for_function('Number(document.getElementById("angelCanvas").dataset.rulerFont)>=20')
         assert float(page.locator('#angelCanvas').get_attribute('data-ruler-font'))>=20
         first=page.locator('#angelCanvas').screenshot()
         before=int(page.locator('#angelCanvas').get_attribute('data-frames'))
@@ -110,7 +111,7 @@ def run():
         expect(page.locator('#editor')).to_be_hidden()
         expect(page.locator('#fileSidebar')).to_be_visible()
         actions('memo.txt')
-        assert page.locator('#fileActions button').all_text_contents()==['Open','Delete','Compile','Active']
+        assert page.locator('#fileActions button:visible').all_text_contents()==['Open','Delete','Compile','Active']
         expect(page.locator('[data-action="activate"]')).to_be_disabled()
         click('[data-action="open"]')
         expect(page.locator('#text')).to_have_value('筆記\nprint("hello")')
@@ -171,6 +172,7 @@ def run():
             page.wait_for_function('!document.getElementById("angelPlayer").getAnimations().length')
         # 多檔案只在Angel列表捲動，不進入系統功能表。
         for index in range(70): api._store.save(f'note-{index:02}.txt','note')
+        page.evaluate('loadFiles(true)')
         click('#minimizeAngel')
         expect(page.locator('#angelPlayer')).to_be_hidden()
         frozen=page.locator('#angelCanvas').get_attribute('data-frames')

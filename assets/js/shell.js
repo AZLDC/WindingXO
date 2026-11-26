@@ -1,7 +1,7 @@
 'use strict';
 
 const appFrame=document.getElementById('appFrame');
-const methods=new Set(['list_files','read_file','save_file','delete_file','get_disk_usage','toggle_fullscreen','close_app']);
+const methods=new Set(['list_files','list_catalog','compile_file','invalidate_file','activate_file','rename_file','read_file','save_file','delete_file','get_disk_usage','toggle_fullscreen','close_app']);
 function hostAPI() {
     const host=window.getWindingAPI();
     if(host)return Promise.resolve(host);

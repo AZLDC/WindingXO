@@ -7,9 +7,11 @@ const angelVisual = new window.AngelVisual($('angelCanvas'));
 const editHistory = new window.WindingHistory(20);
 let currentName = '', savedText = '', selectedFile = '', zIndex = 10, busy = false;
 let fileVersion = 0, allowNavigation = false, openingAnimation = null;
-const fileContents = new Map();
+let fileCatalog = null, catalogRequest = null;
+let pendingInvalidation = Promise.resolve();
+const invalidations = new Set();
 const geometry = new WeakMap();
-// 只保存本次桌面中的演出狀態，不編譯或執行任何文件內容。
+// 由持久索引重建演出狀態，不編譯或執行任何文件內容。
 const scriptStates = new Map();
 
 function ask(title, message, labels = ['確定'], input = null) {
@@ -70,9 +72,20 @@ async function action(operation) {
     if (busy || !$('modal').hidden) return;
     busy = true;
     text.readOnly = true;
-    try { await operation(); }
+    try { await flushInvalidations(); await operation(); }
     catch (error) { await ask('Angel Player', error.message); }
     finally { busy = false; text.readOnly = false; }
+}
+
+function flushInvalidations() {
+    // 保留失敗項目供下次操作重試，不讓一次儲存錯誤卡住整個編輯器。
+    pendingInvalidation = pendingInvalidation.catch(() => {}).then(async () => {
+        for (const name of invalidations) {
+            await api('invalidate_file', name);
+            invalidations.delete(name);
+        }
+    });
+    return pendingInvalidation;
 }
 
 function updateTitle() {
@@ -96,21 +109,20 @@ async function save(saveAs = false) {
         }
         name = await api('save_file', name, snapshot, true);
     }
-    if (scriptStates.get(name)?.content !== snapshot) scriptStates.delete(name);
     currentName = name;
     savedText = snapshot;
     selectedFile = name;
-    fileContents.set(name, snapshot);
     updateTitle();
-    await loadFiles();
+    await loadFiles(true);
     return true;
 }
 
 async function compile(name) {
-    const snapshot = await api('read_file', name), progress = $('compileProgress');
-    fileContents.set(name, snapshot);
-    const previousFocus = document.activeElement;
+    await api('read_file', name);
+    await api('invalidate_file', name);
     scriptStates.delete(name);
+    const progress = $('compileProgress');
+    const previousFocus = document.activeElement;
     progress.value = 0;
     $('compilePercent').textContent = '0%';
     $('compileFilename').textContent = name.replace(/\.txt$/i, '');
@@ -138,7 +150,9 @@ async function compile(name) {
                 }
             }, 50);
         });
-        if (completed) scriptStates.set(name, {content: snapshot, active: false});
+        if (completed) {
+            await api('compile_file', name);
+        }
     } finally {
         clearInterval(timer); clearTimeout(completionTimer);
         $('compileScreen').hidden = true;
@@ -149,7 +163,7 @@ async function compile(name) {
         previousFocus?.focus();
         if (!player.hidden) angelVisual.start();
         updateTitle();
-        if (!player.hidden) await loadFiles();
+        if (!player.hidden) await loadFiles(true);
     }
 }
 
@@ -163,10 +177,8 @@ async function canLeave() {
 async function openFile(name) {
     if (!await canLeave()) return false;
     const content = await api('read_file', name);
-    if (scriptStates.get(name)?.content !== content) scriptStates.delete(name);
     currentName = name; savedText = content; text.value = content;
     editHistory.reset(content);
-    fileContents.set(name, content);
     updateTitle(); setEditorVisible(true);
     return true;
 }
@@ -313,32 +325,45 @@ for (const win of [editor]) {
 function hideActions() {
     $('fileActions').hidden = true;
     document.querySelectorAll('.file-row.selected').forEach(row => row.classList.remove('selected'));
+    updateDetails();
 }
 function closeMenu() {
     $('startMenu').hidden = true;
     $('start').setAttribute('aria-expanded', 'false');
 }
-function showActions(row, focus = false) {
+function showActions(row, focus = false, context = false) {
     hideActions(); selectedFile = row.dataset.name;
     row.classList.add('selected');
     const menu = $('fileActions'), r = row.getBoundingClientRect();
     const state = scriptStates.get(selectedFile), activate = menu.querySelector('[data-action=activate]');
     activate.textContent = state?.active ? 'Deactive' : 'Active';
     activate.disabled = busy || !state;
+    menu.querySelector('[data-action=rename]').hidden = !context;
     menu.hidden = false;
     menu.style.left = `${Math.max(0, Math.min($('fileSidebar').getBoundingClientRect().right - 1, innerWidth-menu.offsetWidth))}px`;
     menu.style.top = `${Math.max(2, Math.min(r.top, innerHeight - menu.offsetHeight - 2))}px`;
     if (focus) menu.querySelector('button').focus();
     updateDetails();
 }
-async function loadFiles() {
+async function loadFiles(refresh = false) {
+    if (refresh) fileCatalog = null;
     const version = ++fileVersion;
     hideActions();
     const list = $('fileList');
     list.replaceChildren();
     const message = document.createElement('p'); message.className = 'empty'; message.textContent = '讀取中…'; list.append(message);
     try {
-        const files = await api('list_files');
+        if (!fileCatalog) {
+            if (!catalogRequest) catalogRequest = api('list_catalog').finally(() => { catalogRequest = null; });
+            fileCatalog = await catalogRequest;
+            scriptStates.clear();
+            for (const item of fileCatalog) {
+                if (item.compiled) {
+                    scriptStates.set(item.name, {...item, active:Boolean(item.region)});
+                }
+            }
+        }
+        const files = fileCatalog.map(item => item.name);
         if (version !== fileVersion) return;
         list.replaceChildren();
         $('fileCount').textContent = `${String(files.length).padStart(2,'0')} FILES`;
@@ -360,6 +385,7 @@ async function loadFiles() {
             fragment.append(row);
         }
         list.append(fragment);
+        updateDetails();
     } catch (error) { if (version === fileVersion) message.textContent = error.message; }
 }
 
@@ -386,7 +412,19 @@ $('fileActions').onclick = event => {
     action(async () => {
         if (operation === 'activate') {
             const state = scriptStates.get(name);
-            if (state) { state.active = !state.active; updateTitle(); }
+            if (state) {
+                await api('activate_file', name, state.active ? null : angelVisual.region);
+                await loadFiles(true);
+            }
+        }
+        if (operation === 'rename') {
+            const answer = await ask('重新命名', '檔名：', ['重新命名', '取消'], name);
+            if (!answer || typeof answer !== 'object') return;
+            const renamed = await api('rename_file', name, answer.value);
+            if (currentName === name) currentName = renamed;
+            selectedFile = renamed;
+            await loadFiles(true);
+            updateTitle();
         }
         if (operation === 'open') await openFile(name);
         if (operation === 'compile') await compile(name);
@@ -394,11 +432,10 @@ $('fileActions').onclick = event => {
             if (await ask('確認刪除', `要刪除「${name}」嗎？`, ['刪除', '取消']) !== '刪除') return;
             await api('delete_file', name);
             scriptStates.delete(name);
-            fileContents.delete(name);
             if (currentName === name) { currentName = ''; savedText = ''; updateTitle(); }
             if (selectedFile === name) selectedFile = '';
             updateDetails();
-            await loadFiles();
+            await loadFiles(true);
         }
     });
 };
@@ -421,7 +458,7 @@ document.addEventListener('keydown', event => {
     const menu = event.target.closest('#startMenu, #fileList, #fileActions, #contextMenu');
     if (menu && ['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
         event.preventDefault();
-        const buttons = [...menu.querySelectorAll('button:not(:disabled)')], index = buttons.indexOf(document.activeElement);
+        const buttons = [...menu.querySelectorAll('button:not(:disabled):not([hidden])')], index = buttons.indexOf(document.activeElement);
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
         buttons[next]?.focus();
     }
@@ -467,6 +504,13 @@ $('logout').onclick = () => {
 };
 function edited() {
     editHistory.record(text.value,text.selectionStart,text.selectionEnd);
+    if (currentName) {
+        const name = currentName;
+        invalidations.add(name);
+        flushInvalidations().catch(error => ask('Angel Player', `狀態保存失敗：${error.message}`));
+        const item = fileCatalog?.find(item => item.name === name);
+        if (item) { item.compiled = false; item.region = null; }
+    }
     scriptStates.delete(currentName);
     updateTitle();
     if (selectedFile === currentName && !$('fileActions').hidden) {
@@ -504,6 +548,7 @@ window.addEventListener('winding:resume', () => {
 });
 window.addEventListener('winding:restart', event => event.waitUntil((async()=>{
     try {
+        await flushInvalidations();
         if (text.value!==savedText) {
             const snapshot=text.value;
             let name=currentName || 'Untitled.txt',suffix=1;
@@ -535,6 +580,7 @@ document.querySelectorAll('[data-region]').forEach(button => {
         document.querySelectorAll('[data-region]').forEach(item => item.setAttribute('aria-pressed',String(item===button)));
         $('regionName').textContent = regions[angelVisual.region][0];
         $('regionDescription').textContent = regions[angelVisual.region][1];
+        hideActions();
     };
 });
 function updateDetails() {
@@ -542,10 +588,20 @@ function updateDetails() {
         const icon = row.firstElementChild, symbol = scriptStates.get(row.dataset.name)?.active ? '●' : '▤';
         if (icon.textContent !== symbol) icon.textContent = symbol;
     });
-    const name = selectedFile || currentName, state = scriptStates.get(name);
-    $('detailFilename').textContent = name ? name.replace(/\.txt$/i,'') : '(null)';
-    $('detailState').textContent = name ? (state ? (state.active ? 'Active' : 'Compiled') : '—') : '—';
-    $('detailSize').textContent = fileContents.has(name) ? `${new TextEncoder().encode(fileContents.get(name)).length} B` : '—';
+    const inspecting = !$('fileActions').hidden && selectedFile;
+    const state = scriptStates.get(selectedFile), item = fileCatalog?.find(item => item.name === selectedFile);
+    const mounted = [...scriptStates.values()].filter(item => item.region === angelVisual.region);
+    $('regionName').textContent = regions[angelVisual.region][0];
+    $('detailFileLabel').textContent = inspecting ? 'FILE' : 'SKILLS';
+    $('detailStateLabel').textContent = inspecting ? 'STATE' : 'SLOTS';
+    $('detailSizeLabel').textContent = inspecting ? 'COST' : 'USED';
+    $('detailFilename').replaceChildren();
+    const lines = inspecting ? [selectedFile.replace(/\.txt$/i,'')] : mounted.map(item => `${item.name.replace(/\.txt$/i,'')} · ${item.cost}%`);
+    for (const line of lines.length ? lines : ['(null)']) {
+        const span = document.createElement('span');span.className = 'mounted-skill';span.textContent = line;$('detailFilename').append(span);
+    }
+    $('detailState').textContent = inspecting ? (state ? (state.active ? `Active · ${state.region.toUpperCase()}` : 'Compiled') : '—') : `${mounted.length} MOUNTED`;
+    $('detailSize').textContent = inspecting ? (item?.cost ? `${item.cost}%` : '—') : `${mounted.reduce((sum,item) => sum + item.cost,0)}% / 100%`;
     $('activeCount').textContent = `${String([...scriptStates.values()].filter(value=>value.active).length).padStart(2,'0')} ACTIVE`;
 }
 function clock() { $('clock').textContent = new Date().toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit',hour12:false}); }

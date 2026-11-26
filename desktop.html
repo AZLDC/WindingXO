@@ -29,7 +29,7 @@
         <div id="visualStage" class="visual-stage">
         <canvas id="angelCanvas" aria-label="旋轉刻度環與三維網格人形"></canvas>
         <div class="visual-heading"><span>ANGEL PLAYER</span><small>BODY STRUCTURE / ANALYSIS</small><small id="diskUsage" class="disk-usage" aria-label="磁碟總容量與使用率">DISK …</small></div>
-        <section class="angel-details" aria-label="局部與文件詳細資料"><header>REGION / INSPECTION</header><dl><dt>REGION</dt><dd id="regionName">TORSO</dd><dt>FILE</dt><dd id="detailFilename">(null)</dd><dt>STATE</dt><dd id="detailState">—</dd><dt>SIZE</dt><dd id="detailSize">—</dd></dl><p id="regionDescription">Upper body contour and surface grid.</p></section>
+        <section class="angel-details" aria-label="部位掛載與資源用量"><header>REGION / INSPECTION</header><dl><dt>REGION</dt><dd id="regionName">TORSO</dd><dt id="detailFileLabel">SKILLS</dt><dd id="detailFilename">(null)</dd><dt id="detailStateLabel">SLOTS</dt><dd id="detailState">0 MOUNTED</dd><dt id="detailSizeLabel">USED</dt><dd id="detailSize">0% / 100%</dd></dl><p id="regionDescription">Upper body contour and surface grid.</p></section>
         <section id="regionControls" class="region-controls" aria-label="部位選擇"><div class="region-buttons"><button data-region="head" aria-pressed="false">HEAD</button><button data-region="torso" aria-pressed="true">TORSO</button><button data-region="arms" aria-pressed="false">ARMS</button><button data-region="legs" aria-pressed="false">LEGS</button></div></section>
         <div class="visual-readout"><span>AXIS Y / <b id="rotationAngle">000.0°</b></span><span id="activeCount">00 ACTIVE</span></div>
     <section id="editor" class="angel-editor" aria-label="Angel Player 文字編輯區" hidden>
@@ -57,6 +57,7 @@
     <button role="menuitem" data-action="delete">Delete</button>
     <button role="menuitem" data-action="compile">Compile</button>
     <button role="menuitem" data-action="activate" disabled>Active</button>
+    <button role="menuitem" data-action="rename" hidden>Rename</button>
 </div>
 <footer class="taskbar"><button class="start" id="start" aria-expanded="false" aria-controls="startMenu"><span aria-hidden="true">▦</span> スタート</button><div id="tasks"><button id="angelTask" class="task" hidden>✧ Angel Player</button><button id="echoTask" class="task" hidden><img class="echo-icon" src="assets/icons/echochrome.png" alt=""> Echochrome</button></div><time id="clock"></time></footer>
 <div id="contextMenu" class="context-menu" role="menu" aria-label="右鍵選單" hidden></div>
