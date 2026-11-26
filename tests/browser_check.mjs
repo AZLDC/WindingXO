@@ -430,10 +430,10 @@ try {
         }
     }
     assert.equal(await inFrame(`(()=>{
-        const group=document.getElementById('cells'),track=document.getElementById('track'),blocks=[...group.children],bar=document.querySelector('.progress'),style=getComputedStyle(blocks[0]);
+        const group=document.getElementById('cells'),track=document.getElementById('track'),blocks=[...group.children],bar=document.querySelector('.progress'),style=getComputedStyle(blocks[0],'::before');
         const phase=progressPhase;
         try{
-            if(blocks.length!==3||getComputedStyle(track).overflow!=='hidden'||getComputedStyle(bar).boxShadow!=='none'||style.backgroundImage.includes('90deg'))return false;
+            if(blocks.length!==3||getComputedStyle(track).overflow!=='hidden'||getComputedStyle(bar).boxShadow!=='none'||!style.backgroundImage.startsWith('linear-gradient(')||style.backgroundImage.includes('90deg')||!style.maskImage.includes('data:image/svg+xml')||style.zIndex!=='1')return false;
             progressPhase=.5;progress();
             const links=blocks.map(c=>getComputedStyle(c,'::after'));
             if(!links.slice(0,2).every(s=>s.content==='\"\"'&&s.backgroundColor==='rgb(17, 27, 87)'&&parseFloat(s.width)>0&&parseFloat(s.height)>0)||links[2].content!=='none')return false;

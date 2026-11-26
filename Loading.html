@@ -123,12 +123,14 @@
 
             .cells {
                 --cell-gap: 2px;
+                --cell-bend: 1px;
                 position: absolute;
                 left: 0;
                 top: 0;
                 display: flex;
                 height: 100%;
                 gap: var(--cell-gap);
+                padding-right: var(--cell-bend);
                 will-change: transform
             }
 
@@ -138,19 +140,29 @@
                 flex: none;
             }
 
+            .cell::before {
+                content: '';
+                position: absolute;
+                inset: 0 calc(-1 * var(--cell-bend)) 0 0;
+                z-index: 1;
+                background: var(--cell-fill);
+                -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10.4' preserveAspectRatio='none'%3E%3Cpath d='M0 0H9C10 2.6 10 7.8 9 10.4H0C1 7.8 1 2.6 0 0Z' fill='white'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+                mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10.4' preserveAspectRatio='none'%3E%3Cpath d='M0 0H9C10 2.6 10 7.8 9 10.4H0C1 7.8 1 2.6 0 0Z' fill='white'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+            }
+
             .cell:not(:last-child)::after {
                 content: '';
                 position: absolute;
-                right: calc(-1 * var(--cell-gap));
+                right: calc(-1 * (var(--cell-gap) + var(--cell-bend)));
                 top: 30%;
-                width: var(--cell-gap);
+                width: calc(var(--cell-gap) + var(--cell-bend));
                 height: 40%;
                 background: #111b57;
             }
 
             /* 左側方塊 */
             .cell:nth-child(1) {
-                background: linear-gradient(180deg,
+                --cell-fill: linear-gradient(180deg,
                     #20277e 0%,
                     #596cda 15%,
                     #97a9ff 30%,
@@ -160,7 +172,7 @@
 
             /* 中間方塊 */
             .cell:nth-child(2) {
-                background: linear-gradient(180deg,
+                --cell-fill: linear-gradient(180deg,
                     #20277e 0%,
                     #596cda 20%,
                     #97a9ff 40%,
@@ -170,7 +182,7 @@
 
             /* 右側方塊 */
             .cell:nth-child(3) {
-                background: linear-gradient(180deg,
+                --cell-fill: linear-gradient(180deg,
                     #20277e 10%,
                     #596cda 30%,
                     #97a9ff 50%,
@@ -500,8 +512,9 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                 const cw = Math.max(1, Math.round(w * .07));
                 for (const c of cells.children)
                     c.style.width = cw + 'px';
-                const gap = parseFloat(getComputedStyle(cells).gap) || 0;
-                const span = cells.children.length * cw + (cells.children.length - 1) * gap;
+                const style = getComputedStyle(cells);
+                const gap = parseFloat(style.gap) || 0;
+                const span = cells.children.length * cw + (cells.children.length - 1) * gap + (parseFloat(style.paddingRight) || 0);
                 cells.style.transform = `translateX(${-span + progressPhase * (w + span)}px)`
             }
             function tick(time) {
