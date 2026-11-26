@@ -35,6 +35,9 @@ body.angel-open #workspace{inset:0}body.angel-open .taskbar,body.angel-open #sta
 .angel-modal #dialogButtons button:hover,.angel-modal #dialogButtons button:focus-visible{background:#0b4960;outline:1px solid #9ce9ff}
 @media(max-width:950px){.region-controls{width:155px;right:12px}}
 .mounted-skill{display:block}.mounted-skill+.mounted-skill{margin-top:6px}.angel-details{max-height:calc(100% - 260px);overflow:auto}
+.machine-code{margin-top:10px;padding-top:8px;border-top:1px solid #20546a;font:8px Consolas,monospace;color:#79bbd4}.machine-code>span{letter-spacing:.08em}.machine-code pre{margin:6px 0 0;font:10px/1.6 Consolas,monospace;white-space:pre;color:#b5dfef}
+@media(max-width:950px){.machine-code pre{font-size:9px}}
+@media(max-width:650px){.machine-code pre{font-size:10px}}
 @media(max-width:650px){.angel-details{bottom:84px;max-height:min(180px,calc(100% - 200px))}.region-controls{left:10px;right:10px;bottom:36px;width:auto;padding:8px}}
 
 /* 透明軌道只留下與編輯器邊框同色的滑條及方向三角。 */

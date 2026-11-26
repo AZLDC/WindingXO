@@ -13,6 +13,7 @@
 ```powershell
 .venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py"
 node tests/avatar_surface_check.mjs
+node tests/avatar_pose_check.mjs
 node tests/browser_check.mjs
 ```
 

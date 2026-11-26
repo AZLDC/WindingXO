@@ -60,6 +60,21 @@ def run():
         page.wait_for_function("Number(document.getElementById('angelCanvas').dataset.frames)>2")
         assert int(page.locator('#angelCanvas').get_attribute('data-vertices'))>500
         assert page.locator('#angelCanvas').get_attribute('data-rings')=='10'
+        assert page.evaluate('''()=>{
+            angelVisual.stop();
+            angelVisual.hexTime=0;angelVisual.updateHex(2);
+            const first=document.getElementById('machineCode').textContent;
+            angelVisual.updateHex(2.5);
+            if(document.getElementById('machineCode').textContent!==first)return false;
+            angelVisual.updateHex(3);
+            const next=document.getElementById('machineCode').textContent;
+            const words=s=>s.trim().split(/\\s+/);
+            if(!/^(?:[0-9A-F]{4} ){2}[0-9A-F]{4}(?:\\n(?:[0-9A-F]{4} ){2}[0-9A-F]{4}){3}$/.test(next))return false;
+            if(words(first).filter((v,i)=>v!==words(next)[i]).length>1)return false;
+            angelVisual.region='head';angelVisual.updateHex(3.1);
+            const changed=document.getElementById('machineCode').textContent!==next;
+            angelVisual.region='torso';angelVisual.start();return changed;
+        }'''), 'Hex每秒只更新一字組，切換部位整組更新'
         rulers=page.evaluate('''()=>{
             angelVisual.stop();
             const original=angelVisual.ring,frames=[];
@@ -176,8 +191,10 @@ def run():
         click('#minimizeAngel')
         expect(page.locator('#angelPlayer')).to_be_hidden()
         frozen=page.locator('#angelCanvas').get_attribute('data-frames')
+        frozen_hex=page.locator('#machineCode').text_content()
         page.wait_for_timeout(100)
         assert page.locator('#angelCanvas').get_attribute('data-frames')==frozen
+        assert page.locator('#machineCode').text_content()==frozen_hex
         click('#angelTask')
         expect(page.locator('.file-row')).to_have_count(71)
         assert page.locator('#fileList').evaluate('el=>el.scrollHeight>el.clientHeight&&getComputedStyle(el).scrollbarWidth==="none"')

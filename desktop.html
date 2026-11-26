@@ -13,6 +13,7 @@
 <script defer src="assets/cursors/crystal-frames.js"></script>
 <script defer src="assets/js/cursor.js?v=2"></script>
 <script defer src="assets/models/avatar-mesh.js"></script>
+<script defer src="assets/models/avatar-pose.js"></script>
 <script defer src="assets/js/angel-visual.js"></script>
 <script defer src="assets/js/editor-history.js"></script>
 <script defer src="assets/js/desktop.js"></script>
@@ -29,7 +30,7 @@
         <div id="visualStage" class="visual-stage">
         <canvas id="angelCanvas" aria-label="旋轉刻度環與三維網格人形"></canvas>
         <div class="visual-heading"><span>ANGEL PLAYER</span><small>BODY STRUCTURE / ANALYSIS</small><small id="diskUsage" class="disk-usage" aria-label="磁碟總容量與使用率">DISK …</small></div>
-        <section class="angel-details" aria-label="部位掛載與資源用量"><header>REGION / INSPECTION</header><dl><dt>REGION</dt><dd id="regionName">TORSO</dd><dt id="detailFileLabel">SKILLS</dt><dd id="detailFilename">(null)</dd><dt id="detailStateLabel">SLOTS</dt><dd id="detailState">0 MOUNTED</dd><dt id="detailSizeLabel">USED</dt><dd id="detailSize">0% / 100%</dd></dl><p id="regionDescription">Upper body contour and surface grid.</p></section>
+        <section class="angel-details" aria-label="部位掛載與資源用量"><header>REGION / INSPECTION</header><dl><dt>REGION</dt><dd id="regionName">TORSO</dd><dt id="detailFileLabel">SKILLS</dt><dd id="detailFilename">(null)</dd><dt id="detailStateLabel">SLOTS</dt><dd id="detailState">0 MOUNTED</dd><dt id="detailSizeLabel">USED</dt><dd id="detailSize">0% / 100%</dd></dl><p id="regionDescription">Upper body contour and surface grid.</p><div class="machine-code" aria-label="虛構機械碼"><span>CODE / SIMULATED</span><pre id="machineCode" aria-hidden="true"></pre></div></section>
         <section id="regionControls" class="region-controls" aria-label="部位選擇"><div class="region-buttons"><button data-region="head" aria-pressed="false">HEAD</button><button data-region="torso" aria-pressed="true">TORSO</button><button data-region="arms" aria-pressed="false">ARMS</button><button data-region="legs" aria-pressed="false">LEGS</button></div></section>
         <div class="visual-readout"><span>AXIS Y / <b id="rotationAngle">000.0°</b></span><span id="activeCount">00 ACTIVE</span></div>
     <section id="editor" class="angel-editor" aria-label="Angel Player 文字編輯區" hidden>

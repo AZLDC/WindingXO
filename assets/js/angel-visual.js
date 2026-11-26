@@ -20,6 +20,7 @@ class AngelVisual {
 
     buildHuman() {
         Object.assign(this,window.createImportedMesh());
+        this.vertices=window.poseAvatar(this.vertices,this.faces);
         this.bodyRadius=Math.max(...this.vertices.map(([x,,z])=>Math.hypot(x,z)))*1.08;
         // 只細分顯示線條；原模型輪廓和比例完全保留，長邊不再留下大片空白。
         this.wireDivisions=new Map(this.faces.map(face=>{
@@ -30,9 +31,11 @@ class AngelVisual {
     }
 
     humanLayout() {
-        const w=this.width,h=this.height,mobile=w<420;
-        return {cx:w*(mobile ? .51 : .49),cy:h*(mobile ? .4 : .5),
-            scale:Math.min(h*(mobile ? .083 : .105),w*.46/this.bodyRadius),halfWidth:this.bodyRadius};
+        const w=this.width,h=this.height,mobile=matchMedia('(max-width:650px)').matches;
+        const panel=document.querySelector('.angel-details');
+        const bottom=mobile ? panel.getBoundingClientRect().top-this.canvas.getBoundingClientRect().top-18 : h;
+        return {cx:w*(mobile ? .51 : .49),cy:mobile ? (85+bottom)/2 : h*.5,
+            scale:Math.min(mobile ? Math.max(1,bottom-85)/7.8 : h*.105,w*.46/this.bodyRadius),halfWidth:this.bodyRadius};
     }
 
     resize() {
@@ -66,7 +69,7 @@ class AngelVisual {
             const gradient=ctx.createLinearGradient(0,scanY-22,0,scanY+22);
             gradient.addColorStop(0,base);gradient.addColorStop(.5,bright);gradient.addColorStop(1,base);return gradient;
         };
-        const normal=glow('#3a91af75','#a3efffe0'),selected=glow('#70cdeba8','#d4fbff');
+        const normal=glow('#f4438eaa','#ffaadce8'),selected=glow('#ff96cce0','#ffe0f3');
         // 透視校正的邊插值，確保細網格會隨模型旋轉而非貼在螢幕上。
         const between=(p,q,t)=>{
             const a=(1-t)*(9-p[2]),b=t*(9-q[2]),depth=a+b;
@@ -81,7 +84,7 @@ class AngelVisual {
         for(const {face} of visible) {
             const [a,b,c,part]=face,p=projected[a],q=projected[b],r=projected[c];
             ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(q[0],q[1]);ctx.lineTo(r[0],r[1]);ctx.closePath();
-            ctx.fillStyle='#03131e';ctx.fill();
+            ctx.fillStyle='#230b1b';ctx.fill();
             const divisions=this.wireDivisions.get(face);
             for(let step=1;step<divisions;step++)for(const [a,b,c] of [[p,q,r],[q,r,p],[r,p,q]]) {
                 const u=between(a,b,step/divisions),v=between(a,c,step/divisions);
@@ -153,6 +156,7 @@ class AngelVisual {
     draw(time) {
         const ctx = this.ctx, w = this.width, h = this.height;
         if (!w || !h) return;
+        this.updateHex(time);
         ctx.clearRect(0,0,w,h);
         ctx.strokeStyle = '#16445b22'; ctx.lineWidth = .5;
         ctx.beginPath();
@@ -167,7 +171,7 @@ class AngelVisual {
         const topRadii=this.rulerRadii(small*.94,3);
         const topY=-Math.max(0,Math.min(h*.16,topRadii.at(-1)-24));
         topRadii.forEach((radius,i) => this.ring(w*.14,topY,radius,time*.065,360,.64,true,[30,45,90][i]));
-        const {cx,cy,scale,halfWidth}=this.humanLayout(),angle=time*.28;
+        const {cx,cy,scale,halfWidth}=this.humanLayout(),angle=time*Math.PI*2/10;
         // 壓低人形背後儀表亮度，避免刻度數字穿過臉部與制服輪廓。
         const veil=ctx.createLinearGradient(cx-scale*1.3,0,cx+scale*1.3,0);
         veil.addColorStop(0,'#020c1800');veil.addColorStop(.3,'#020c18e6');
@@ -190,6 +194,19 @@ class AngelVisual {
         if (++this.frames%3===0) document.getElementById('rotationAngle').textContent=`${((angle*180/Math.PI)%360).toFixed(1).padStart(5,'0')}°`;
         this.canvas.dataset.frames=this.frames;
         this.canvas.dataset.rulerFont=this.rulerMaxFont.toFixed(1);
+    }
+
+    updateHex(time) {
+        const output=document.getElementById('machineCode');
+        if (!output) return;
+        const changed=this.hexRegion!==this.region;
+        if (!changed && time-this.hexTime<1) return;
+        const word=()=>Math.floor(Math.random()*65536).toString(16).toUpperCase().padStart(4,'0');
+        if (changed || !this.hexRows) this.hexRows=Array.from({length:4},()=>Array.from({length:3},word));
+        else this.hexRows[Math.floor(Math.random()*4)][Math.floor(Math.random()*3)]=word();
+        output.textContent=this.hexRows.map(row=>row.join(' ')).join('\n');
+        this.hexRegion=this.region;
+        this.hexTime=time;
     }
 }
 window.AngelVisual = AngelVisual;

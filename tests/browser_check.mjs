@@ -271,7 +271,7 @@ try {
             const rgb=s=>s.match(/[0-9.]+/g).map(Number);
             return groups.size===3&&tight&&labels&&layers&&front.width>back.width&&front.shadow>back.shadow&&front.fills>0&&back.fills===0&&rgb(front.color)[0]>rgb(back.color)[0]&&rgb(front.color)[3]>rgb(back.color)[3];
         })()`),true,'rulers must be tightly nested, front-masked, thicker and brighter');
-        assert.equal(await evaluate('(()=>{const {cx,scale,halfWidth}=angelVisual.humanLayout();return cx-scale*halfWidth>=0&&cx+scale*halfWidth<=angelVisual.width;})()'),true,'imported T-pose arms must fit the canvas');
+        assert.equal(await evaluate('(()=>{const {cx,scale,halfWidth}=angelVisual.humanLayout();return cx-scale*halfWidth>=0&&cx+scale*halfWidth<=angelVisual.width;})()'),true,'posed arms must fit the canvas');
         assert.equal(await evaluate('(()=>{const s=getComputedStyle(document.querySelector(".visual-heading"));return s.backgroundImage==="none"&&s.backgroundColor==="rgba(0, 0, 0, 0)";})()'),true,'Angel heading and capacity must have a transparent background');
         if(process.env.WINDING_PREVIEW_DIR){
             await mkdir(process.env.WINDING_PREVIEW_DIR,{recursive:true});
