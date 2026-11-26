@@ -454,6 +454,40 @@ try {
     })()`),true,'XP progress must travel half a cycle in 1.2s and loop in 2.4s');
     assert.equal(await evaluate('location.href'),url('index.html'));
     assert.equal(await evaluate('(()=>{const r=document.getElementById("appFrame").getBoundingClientRect();return r.width===innerWidth&&r.height===innerHeight;})()'),true);
+    await send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+    await send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+    const touch=(type,point={x:8,y:8})=>send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'||type==='touchCancel'?[]:[{...point,id:1,radiusX:1,radiusY:1,force:1}]});
+    await inFrame('window.touchNow=100000;Date.now=()=>touchNow');
+    await touch('touchStart');await inFrame('touchNow+=4999');await touch('touchMove',{x:9,y:8});
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'touch hold must wait the full five seconds');
+    await touch('touchEnd');await inFrame('touchNow+=10000');await delay(70);
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'released touch must reset the boot hold');
+    await touch('touchStart');await inFrame('touchNow+=4999');await touch('touchCancel');await inFrame('touchNow+=10000');await delay(70);
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'cancelled touch must reset the boot hold');
+    const textPoint=await inFrame('(()=>{const r=document.querySelector(".xo").getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()');
+    await touch('touchStart',textPoint);await inFrame('touchNow+=5000');await touch('touchMove',{x:textPoint.x+.5,y:textPoint.y});
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'pointer-events:none logo text must still block black-background timing');
+    await touch('touchEnd');
+    const progressPoint=await inFrame('(()=>{const r=document.querySelector(".progress").getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()');
+    await touch('touchStart',progressPoint);await inFrame('touchNow+=5000');await touch('touchMove',{x:progressPoint.x+1,y:progressPoint.y});
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'holding the progress artwork must not enter login');
+    await touch('touchMove',{x:8,y:8});await inFrame('touchNow+=4999');await touch('touchMove',{x:9,y:8});
+    assert.equal(await inFrame('location.pathname.endsWith("/Loading.html")'),true,'entering the black background must start a fresh hold');
+    await inFrame('touchNow+=1');
+    await until(()=>inFrame('location.pathname.endsWith("/login.html")&&document.readyState==="complete"'),'mobile black-background hold enters shared login');
+    await touch('touchEnd');
+    assert.equal(await evaluate('location.href'),url('index.html'),'touch boot must keep the parent URL');
+    const touchFallback=await send('Page.addScriptToEvaluateOnNewDocument',{source:'if(location.pathname.endsWith("/Loading.html"))Object.defineProperty(window,"PointerEvent",{value:undefined,configurable:true});'});
+    await send('Page.reload');
+    await until(()=>inFrame('location.pathname.endsWith("/Loading.html")&&document.readyState==="complete"'),'touch fallback boot');
+    await inFrame('window.touchNow=100000;Date.now=()=>touchNow');await touch('touchStart');
+    await inFrame('touchNow+=5000');
+    await until(()=>inFrame('location.pathname.endsWith("/login.html")&&document.readyState==="complete"'),'TouchEvent fallback shares the boot entry');
+    await touch('touchEnd');await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:touchFallback.identifier});
+    await send('Emulation.setTouchEmulationEnabled',{enabled:false});
+    await send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
+    await send('Page.reload');
+    await until(()=>inFrame('location.pathname.endsWith("/Loading.html")&&document.readyState==="complete"'),'mouse boot after mobile check');
     await inFrame(`(()=>{
         let clock=0;Date.now=()=>clock;
         for(let i=0;i<=50;i++){clock=i*100;document.dispatchEvent(new MouseEvent('mousemove',{clientX:i,clientY:20,bubbles:true}));}
@@ -497,7 +531,7 @@ try {
     assert.deepEqual(await inFrame('getWindingAPI().list_files().then(r=>r.value)'),['Native.txt'],'child must use parent native bridge');
     await send('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection.identifier});
     assert.deepEqual(errors,[]);
-    console.log('PASS: virtual storage, 12-step undo/redo, context editing/window actions, draggable App dialog, restart autosave/error/collisions and closed App, full-frame boot/login/save/refresh, native isolation, two layouts');
+    console.log('PASS: virtual storage, 12-step undo/redo, context editing/window actions, draggable App dialog, restart autosave/error/collisions and closed App, full-frame boot/login/save/refresh, mobile hold/reset/fallback, native isolation, two layouts');
 } finally {
     server?.close();
     if(socket?.readyState===WebSocket.OPEN) {

@@ -16,6 +16,8 @@
                 background: #000;
                 overflow: hidden;
                 cursor: url('assets/cursors/black-dot.png') 0 0,none;
+                touch-action: none;
+                -webkit-touch-callout: none;
             }
 
             * {
@@ -427,6 +429,7 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                     }
                 return data
             }
+            let bootModelBounds = null;
             function render() {
                 const w = 800, h = 600, dw = w, dh = h;
                 if (canvas.width !== dw || canvas.height !== dh) {
@@ -451,11 +454,19 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                     gl.vertexAttribPointer(a, size, gl.FLOAT, false, 28, offset)
                 }
                 const extent = Math.max(p.height, p.radius * 2.6)
-                  , scale = Math.min(w, h) * .7 * p.modelScale / extent;
+                  , scale = Math.min(w, h) * .7 * p.modelScale / extent
+                  , depthScale = Math.max(extent / 4, 1);
+                const xs=[],ys=[];
+                for (let i=0;i<data.length;i+=7) {
+                    const perspective=7.5/(7.5-data[i+2]/depthScale);
+                    xs.push(p.anchorX/100*w+data[i]*scale*perspective);
+                    ys.push(p.anchorY/100*h-data[i+1]*scale*perspective);
+                }
+                bootModelBounds = {left:Math.min(...xs),right:Math.max(...xs),top:Math.min(...ys),bottom:Math.max(...ys)};
                 gl.uniform2f(un.uAnchor, p.anchorX / 50 - 1, 1 - p.anchorY / 50);
                 gl.uniform1f(un.uScale, scale / (h * .5));
                 gl.uniform1f(un.uAspect, w / h);
-                gl.uniform1f(un.uDepth, Math.max(extent / 4, 1));
+                gl.uniform1f(un.uDepth, depthScale);
                 const light = unit([p.lx, p.ly, p.lz]);
                 gl.uniform3f(un.uLight, light[0], light[1], light[2]);
                 for (const k of ['ambient', 'intensity', 'specular', 'shininess'])
@@ -471,6 +482,14 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                 const width = document.getElementById('bootContent').clientWidth;
                 document.getElementById('logo').style.fontSize = Math.max(12, width * .093 * p.textScale) + 'px'
             }
+            window.isWindingBootBackground = (x,y) => {
+                if (!document.elementFromPoint(x,y)) return false;
+                const rect=canvas.getBoundingClientRect();
+                if (x<rect.left || x>rect.right || y<rect.top || y>rect.bottom) return true;
+                if (!bootModelBounds) return false;
+                const px=(x-rect.left)/rect.width*800,py=(y-rect.top)/rect.height*600,b=bootModelBounds;
+                return px<b.left-2 || px>b.right+2 || py<b.top-2 || py>b.bottom+2;
+            };
             const cells = document.getElementById('cells')
               , track = document.getElementById('track');
             let progressPhase = 0;

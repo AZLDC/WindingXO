@@ -101,3 +101,10 @@ interaction.css接管一般區域、操作按鈕與文字輸入框；input／tex
 ## XP開機進度條
 
 進度條位於原640×480構圖的寬20%、高3%（128×14.4），依800×600虛擬畫面同比例放大。細灰框、黑底，不加外發光。三個小格以track寬度約7%取整數為格寬、間隔2px，間隙中央以高度40%的暗藍短接點連接；每格保留各自的上下藍色漸層。群組寬度包含三格及兩段間隔；progressPhase在2.4秒內從0到1，位移由負群組寬度移到track右界，overflow:hidden只顯示框內部分，再回左側循環。動畫與滑鼠累計登入條件分開。
+
+
+## 手機開機觸控
+
+activity.js以finishBoot共用滑鼠／觸控的winding:boot-ready入口。觸控單指在黑色背景連續停留5秒觸發，離開黑色背景重置開始時間，回到黑色背景重新計時；放開、cancel、失焦或隱藏頁面會清除接觸及計時器。優先用PointerEvent，無PointerEvent時使用TouchEvent；觸控期間不累計相容滑鼠事件。
+
+activity.js以文字、外溢的品牌／XO及進度條矩形排除可見內容，不依賴pointer-events命中；Loading頁的isWindingBootBackground補充當前3D圖案投影邊界。投影邊界沿用render的頂點與比例更新；觸控每50ms檢查，避免旋轉圖案移到手指下方仍繼續計時。僅Loading停用瀏覽器的預設觸控捲動與長按選單，其餘頁面的文字編輯行為不變。
