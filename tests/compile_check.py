@@ -45,8 +45,15 @@ def run():
             expect(page.locator('#compileProgress')).to_have_attribute('max', '100')
 
         def complete():
-            page.clock.fast_forward(10000)
-            assert page.locator('#compileProgress').evaluate('el => el.value') == 100
+            stalled=False
+            for _ in range(240):
+                before=page.locator('#compileProgress').evaluate('el=>el.value')
+                page.clock.run_for(50)
+                after=page.locator('#compileProgress').evaluate('el=>el.value')
+                if 80<=before<100 and before==after: stalled=True
+                if after==100: break
+            assert stalled, '80～99%必須出現停頓'
+            assert after==100
             expect(page.locator('#compileScreen')).to_be_visible()
             page.clock.fast_forward(350)
             expect(page.locator('#compileScreen')).to_be_hidden()
@@ -118,6 +125,8 @@ def run():
         expect(page.locator('[data-action="activate"]')).to_be_disabled()
         click('[data-action="compile"]')
         expect(page.locator('#compileScreen')).to_be_visible()
+        page.clock.run_for(6400)
+        assert 80<=page.locator('#compileProgress').evaluate('el=>el.value')<100
         click('#cancelCompile')
         expect(page.locator('#compileScreen')).to_be_hidden()
         actions()

@@ -3,12 +3,18 @@
 /* 只處理App內輸入；不安裝系統鍵鼠監聽。 */
 document.addEventListener('DOMContentLoaded', () => {
     const boot = location.pathname.endsWith('/Loading.html');
-    const bootDelay = 5000;
+    const touchBootDelay = 5000, mouseBootDelay = 2000;
     const idleDelay = 5 * 60 * 1000;
     let lastInput = Date.now(), timer, blank = false, restarting = false;
     let lastMove = null, moved = 0, position = null, entered = false;
     let screen, previousFocus;
     let hold = null;
+    let moveTimer, bootFocused = true;
+
+    function resetMovement() {
+        clearTimeout(moveTimer);
+        lastMove = null; moved = 0; position = null;
+    }
 
     function cancelHold() {
         if (hold) clearInterval(hold.timer);
@@ -19,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (entered) return;
         entered = true;
         cancelHold();
-        window.dispatchEvent(new Event('winding:boot-ready'));
+        resetMovement();
+        window.dispatchEvent(new Event('winding:boot-finishing'));
     }
 
     function blackBackground(x, y) {
@@ -38,12 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!hold) return;
         if (!blackBackground(hold.x, hold.y)) { hold.started = null; return; }
         if (hold.started === null) hold.started = Date.now();
-        if (Date.now() - hold.started >= bootDelay) finishBoot();
+        if (Date.now() - hold.started >= touchBootDelay) finishBoot();
     }
 
     function startHold(id, x, y) {
-        if (entered || hold) return false;
-        lastMove = null; moved = 0;
+        if (entered || hold || !bootFocused || document.hidden) return false;
+        resetMovement();
         hold = {id, x, y, started:blackBackground(x,y)?Date.now():null, timer:setInterval(checkHold, 50)};
         return true;
     }
@@ -113,13 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
             position = next;
         }
         if (boot) {
-            if (event.type !== 'mousemove' || !changed || entered || hold) return;
+            if (event.type !== 'mousemove' || !changed || entered || hold || !bootFocused || document.hidden) return;
             const now = Date.now(), gap = lastMove === null ? null : now-lastMove;
-            if (gap !== null && gap > 3000) moved = 0;
-            // 稠密移動事件才累計；較長的事件空隙視為停頓，不算移動秒數。
-            if (gap !== null && gap <= 250) moved += gap;
+            if (gap !== null && gap >= 250) moved = 0;
+            if (gap !== null && gap < 250) moved += gap;
             lastMove = now;
-            if (moved >= bootDelay) finishBoot();
+            clearTimeout(moveTimer);
+            moveTimer = setTimeout(resetMovement, 250);
+            if (moved >= mouseBootDelay) finishBoot();
             return;
         }
         if (!changed) return;
@@ -160,8 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }, {capture:true,passive:false});
             for (const type of ['touchend','touchcancel']) window.addEventListener(type,cancelHold,true);
         }
-        window.addEventListener('blur',cancelHold);
-        document.addEventListener('visibilitychange',()=>{ if (document.hidden) cancelHold(); });
+        window.addEventListener('blur',()=>{ bootFocused=false; cancelHold(); resetMovement(); });
+        window.addEventListener('focus',()=>{ bootFocused=true; });
+        document.addEventListener('visibilitychange',()=>{ if (document.hidden) { cancelHold(); resetMovement(); } });
     }
     if (!boot) armIdle();
     // 失去焦點不重置倒數；背景timer受節流時，回到App也立即補查。

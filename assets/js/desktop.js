@@ -134,7 +134,11 @@ async function compile(name) {
     let timer, completionTimer;
     try {
         const completed = await new Promise(resolve => {
-            const started = performance.now();
+            let previous = performance.now(), elapsed = 0, pauseUntil = 0;
+            const pauseCount=1+Math.floor(Math.random()*3);
+            const pauses = Array.from({length:pauseCount}, (_,i) => ({
+                at:80+Math.floor((i+Math.random())*20/pauseCount), duration:300+Math.floor(Math.random()*701)
+            }));
             const finish = result => { clearInterval(timer); clearTimeout(completionTimer); resolve(result); };
             $('cancelCompile').onclick = () => finish(false);
             $('compileScreen').onkeydown = event => {
@@ -142,7 +146,15 @@ async function compile(name) {
                 if (event.key === 'Tab') { event.preventDefault(); $('cancelCompile').focus(); }
             };
             timer = setInterval(() => {
-                progress.value = Math.min(100, (performance.now() - started) / 80);
+                const now = performance.now();
+                elapsed += Math.max(0, now-Math.max(previous,pauseUntil));
+                previous = now;
+                if (pauses.length && elapsed/80 >= pauses[0].at) {
+                    const pause = pauses.shift();
+                    elapsed = pause.at*80;
+                    pauseUntil = now+pause.duration;
+                }
+                progress.value = Math.min(100, elapsed / 80);
                 $('compilePercent').textContent = `${Math.floor(progress.value)}%`;
                 if (progress.value >= 100) {
                     clearInterval(timer);

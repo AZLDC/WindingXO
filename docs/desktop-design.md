@@ -24,7 +24,7 @@ Python以固定pywebview6.2.1承載本機HTML，首次全螢幕，之後恢復�
 
 Loading的stage為800×600虛擬4:3區塊，縮放係數min(innerWidth/800,innerHeight/600)，以left/top 50%及translate(-50%,-50%) scale(...)置中，周圍body純黑。既有640×480構圖以1.25倍放入stage，字體依bootContent邏輯寬度計算，避免再次套用螢幕縮放。WebGL固定800×600繪圖緩衝；大小視窗均整組等比例適配，不拉伸、不裁切。1920×1200時實際區塊1600×1200，左右各160px黑邊。
 
-三頁共用activity.js。開機以mousemove座標變更為採樣，連續事件間隔不超過250ms累計該間隔；較長間隔視為停頓、不計入移動，間隔不超過3000ms保留累計，超過重算。累計5000ms送winding:boot-ready，由Loading既有導頁函式進login。單一事件、同座標、鍵盤與點擊均不累計。
+各入口共用activity.js。開機以mousemove座標變更為採樣，事件間隔小於250ms才累計；250ms未移動、失焦或頁面隱藏清零，失焦期間不累計。連續2000ms送winding:boot-finishing；Loading將進度條停在隨機可見位置1000ms，再移動1000ms才送winding:boot-ready並進login。達標後不需繼續操作。單一事件、同座標、鍵盤與點擊均不累計。
 
 login及desktop維護最後輸入的5分鐘deadline，鍵盤、移動／點擊／滾輪重設；黑屏用全App固定最高層遮罩與背景inert、隱藏游標，停止Angel動畫。window capture攔截並消耗喚醒輸入，先送winding:restart，再replace至Loading，避免鍵盤快捷鍵／電源點擊穿透。下次輸入也檢查deadline，涵蓋背景timer節流。開機頁不另啟動5分鐘黑屏。
 
@@ -94,7 +94,7 @@ Canvas依容器尺寸及最多2倍DPR設置，半徑在同一座標比例下計�
 
 ## 沿用規則
 
-Compile只讀所選磁碟檔，以獨立登入風格終端顯示8秒進度及350ms滿格停留，不Open、不切換或自動保存草稿。背景inert，CANCEL或Escape可取消，finally恢復背景及Angel動畫。完成才可Active；逐檔狀態只在記憶體中，登出／重啟重設，不執行任何Script。
+Compile只讀所選已存檔，以獨立登入風格終端顯示基本8秒進度及350ms滿格停留；80～99%抽取1～3個不同百分比，每處暫停300～1000ms，暫停時間不計入有效進度。不Open、不切換或自動保存草稿。背景inert，包含停頓期間均可CANCEL或Escape取消，finally清除計時器、恢復背景及Angel動畫。完成才可Active；狀態由文件索引保存，詳見README的Compile與掛載說明，不執行任何Script。
 
 Compile外層透明，直接呈現底下App，不另畫全畫面黑底或掃描線；中央終端面板保留原風格。全畫面遮罩保留命中範圍與pointer events，workspace設inert，鍵盤Tab限制在取消按鈕，關閉前不能穿透操作底層。
 
@@ -121,6 +121,6 @@ interaction.css接管一般區域、操作按鈕與文字輸入框；input／tex
 
 ## 手機開機觸控
 
-activity.js以finishBoot共用滑鼠／觸控的winding:boot-ready入口。觸控單指在黑色背景連續停留5秒觸發，離開黑色背景重置開始時間，回到黑色背景重新計時；放開、cancel、失焦或隱藏頁面會清除接觸及計時器。優先用PointerEvent，無PointerEvent時使用TouchEvent；觸控期間不累計相容滑鼠事件。
+activity.js以finishBoot共用滑鼠／觸控的winding:boot-finishing入口，統一經過停1秒、移動1秒收尾再進登入。觸控單指在黑色背景連續停留5秒觸發，離開黑色背景重置開始時間，回到黑色背景重新計時；達標前放開、cancel、失焦或隱藏頁面會清除接觸及計時器。優先用PointerEvent，無PointerEvent時使用TouchEvent；觸控期間不累計相容滑鼠事件。
 
 activity.js以文字、外溢的品牌／XO及進度條矩形排除可見內容，不依賴pointer-events命中；Loading頁的isWindingBootBackground補充當前3D圖案投影邊界。投影邊界沿用render的頂點與比例更新；觸控每50ms檢查，避免旋轉圖案移到手指下方仍繼續計時。僅Loading停用瀏覽器的預設觸控捲動與長按選單，其餘頁面的文字編輯行為不變。

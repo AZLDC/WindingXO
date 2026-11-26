@@ -40,7 +40,8 @@ def run():
             expect(page.locator('#stage')).to_be_visible()
             page.clock.fast_forward(10000)
             assert page.url.endswith('Loading.html')
-            moving(page,50)
+            moving(page,20)
+            page.clock.run_for(2000)
             page.wait_for_url('**/login.html')
 
         page.goto((ROOT/'login.html').as_uri())

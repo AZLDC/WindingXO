@@ -505,6 +505,7 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
             const cells = document.getElementById('cells')
               , track = document.getElementById('track');
             let progressPhase = 0;
+            let progressPaused = false;
             function progress() {
                 const w = track.clientWidth;
                 if (!w)
@@ -521,7 +522,7 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                 const dt = last ? Math.min(.06, (time - last) / 1000) : 0;
                 last = time;
                 spin += rad(p.speed) * dt;
-                progressPhase = (progressPhase + dt / 2.4) % 1;
+                if (!progressPaused) progressPhase = (progressPhase + dt / 2.4) % 1;
                 render();
                 progress();
                 requestAnimationFrame(tick)
@@ -531,6 +532,12 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
             resizeLogo();
             requestAnimationFrame(tick);
             addEventListener('resize', resizeLogo);
+            addEventListener('winding:boot-finishing', () => {
+                progressPhase = .15 + Math.random() * .5;
+                progressPaused = true;
+                progress();
+            }, {once:true});
+            addEventListener('winding:boot-resume', () => { progressPaused = false; });
         </script>
         <div id="missingLogin" hidden style="position:fixed;left:50%;bottom:5%;transform:translateX(-50%);font:14px Arial,sans-serif;color:#9deafa;background:#071724;border:1px solid #38bde0;padding:12px 18px;z-index:10;cursor:default">找不到同一資料夾中的 login.html</div>
 
@@ -572,6 +579,15 @@ gl_FragColor=vec4(clamp(base*min(1.5,uAmbient+diffuse*uIntensity)+vec3(spec),0.,
                 }
 
                 window.addEventListener('winding:boot-ready', enterLogin);
+                // 收尾計時獨立於WebGL；圖案無法繪製時仍可進入登入。
+                window.addEventListener('winding:boot-finishing', () => {
+                    document.body.dataset.bootPhase = 'paused';
+                    setTimeout(() => {
+                        document.body.dataset.bootPhase = 'running';
+                        window.dispatchEvent(new Event('winding:boot-resume'));
+                        setTimeout(() => window.dispatchEvent(new Event('winding:boot-ready')), 1000);
+                    }, 1000);
+                }, {once:true});
                 document.addEventListener('keydown', event => {
                     if (event.key.toLowerCase() === 'f') tryFullscreen();
                 });

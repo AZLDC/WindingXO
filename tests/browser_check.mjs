@@ -230,7 +230,7 @@ try {
     await until(()=>evaluate('!document.getElementById("compileScreen").hidden'),'Compile');
     assert.equal(await evaluate('document.getElementById("editor").hidden'),true);
     assert.equal(await evaluate('document.getElementById("workspace").inert'),true);
-    await evaluate('window.originalNow=performance.now.bind(performance);window.compileClock=originalNow();Object.defineProperty(performance,"now",{value:()=>compileClock+9000,configurable:true})');
+    await evaluate('window.originalNow=performance.now.bind(performance);Object.defineProperty(performance,"now",{value:()=>originalNow()+9000,configurable:true})');
     await until(()=>evaluate('document.getElementById("compileScreen").hidden'),'Compile completion');
     await evaluate('Object.defineProperty(performance,"now",{value:originalNow,configurable:true})');
     await ready();
